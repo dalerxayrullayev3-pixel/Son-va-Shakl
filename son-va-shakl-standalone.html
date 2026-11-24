@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Son va Shakl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Layout concept: a two-world "math lab" — a cosmic night backdrop split
+     between an amber Algebra wing and a teal Geometry wing, with a single
+     glass "question card" that both worlds share, and a reactive robot
+     mascot ("Sonchik") that lives beside the player through every screen. */
+  :root{
+    --bg:#121128;
+    --bg-deep:#0c0b1d;
+    --surface:#1d1c3c;
+    --surface-2:#262548;
+    --border:rgba(255,255,255,.09);
+    --text:#f3f2fb;
+    --muted:#a6a3cf;
+    --algebra:#ffb648;
+    --algebra-ink:#4a2f05;
+    --algebra-glow:rgba(255,182,72,.35);
+    --geometry:#49d9c4;
+    --geometry-ink:#063531;
+    --geometry-glow:rgba(73,217,196,.32);
+    --danger:#ff6b7a;
+    --success:#6be3a6;
+    --font-display:'Baloo 2', 'Segoe UI Rounded', system-ui, sans-serif;
+    --font-body:'Inter', system-ui, -apple-system, sans-serif;
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:
+      radial-gradient(60rem 36rem at 15% -10%, rgba(255,182,72,.10), transparent 60%),
+      radial-gradient(60rem 36rem at 90% 10%, rgba(73,217,196,.12), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    min-height:100%;
+    line-height:1.5;
+  }
+  h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0}
+  p{margin:0}
+  button{font-family:inherit; cursor:pointer}
+  button:focus-visible, a:focus-visible{outline:3px solid var(--geometry); outline-offset:2px}
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important; transition-duration:.001ms !important}
+  }
+
+  .app{
+    max-width:640px;
+    margin:0 auto;
+    padding-left:max(16px, env(safe-area-inset-left,0px));
+    padding-right:max(16px, env(safe-area-inset-right,0px));
+    padding-block:20px 48px;
+  }
+
+  .screen{animation:fadeIn .4s ease both}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+
+  /* ---------- Mascot ---------- */
+  .mascot-box{width:104px; margin:0 auto; text-align:center}
+  .mascot-box.lg{width:128px}
+  .mascot-svg{width:100%; height:auto; display:block; animation:bob 2.6s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)}}
+  .mascot-speech{margin-top:8px; font-size:.86rem; color:var(--muted); font-weight:600; min-height:1.2em}
+  .mascot-row{display:flex; align-items:center; gap:10px; margin-bottom:12px}
+  .mascot-mini{width:46px; flex:none}
+  .mascot-mini .mascot-svg{animation:none}
+  .mascot-speech-inline{font-size:.84rem; color:var(--muted); font-weight:600; min-width:0}
+
+  /* ---------- Start screen ---------- */
+  .hero{
+    margin-top:calc(-1 * env(safe-area-inset-top,0px));
+    padding-top:calc(env(safe-area-inset-top,0px) + 14px);
+    background:linear-gradient(135deg, rgba(255,182,72,.14), rgba(73,217,196,.14));
+    border-bottom:1px solid var(--border);
+  }
+  .hero-inner{
+    max-width:640px; margin:0 auto;
+    padding:18px max(16px, env(safe-area-inset-left,0px)) 24px max(16px, env(safe-area-inset-right,0px));
+    display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px;
+  }
+  .eyebrow{
+    font-size:.78rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--geometry);
+  }
+  .title{
+    font-size:clamp(2.1rem, 9vw, 2.8rem); font-weight:800; margin-top:.2rem;
+    background:linear-gradient(90deg, var(--algebra), var(--geometry));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .subtitle{margin-top:.4rem; color:var(--muted); font-size:.98rem; max-width:48ch}
+
+  .mode-grid{display:grid; gap:14px; margin-top:22px; grid-template-columns:1fr}
+  @media (min-width:520px){ .mode-grid{grid-template-columns:1fr 1fr} }
+
+  .mode-card{
+    text-align:left; border-radius:20px; padding:20px;
+    border:1px solid var(--border); background:var(--surface);
+    display:flex; flex-direction:column; gap:8px; min-width:0;
+    transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  }
+  .mode-card:hover, .mode-card:active{transform:translateY(-2px)}
+  .mode-card.algebra:hover{border-color:var(--algebra); box-shadow:0 10px 30px -14px var(--algebra-glow)}
+  .mode-card.geometry:hover{border-color:var(--geometry); box-shadow:0 10px 30px -14px var(--geometry-glow)}
+  .mode-icon{
+    width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+  }
+  .mode-card.algebra .mode-icon{background:var(--algebra); color:var(--algebra-ink)}
+  .mode-card.geometry .mode-icon{background:var(--geometry); color:var(--geometry-ink)}
+  .mode-icon svg{width:28px; height:28px}
+  .mode-card h2{font-size:1.25rem; margin-top:4px}
+  .mode-card p{color:var(--muted); font-size:.92rem}
+  .mode-best{font-size:.82rem; color:var(--muted); margin-top:2px}
+  .mode-best span{color:var(--text); font-weight:700; font-variant-numeric:tabular-nums}
+  .play-label{margin-top:6px; font-weight:700; font-size:.92rem}
+  .mode-card.algebra .play-label{color:var(--algebra)}
+  .mode-card.geometry .play-label{color:var(--geometry)}
+
+  .hint{margin-top:20px; color:var(--muted); font-size:.86rem; text-align:center}
+
+  /* ---------- Difficulty screen ---------- */
+  .sub-header{display:flex; align-items:center; gap:10px; padding-top:calc(env(safe-area-inset-top,0px) + 4px)}
+  .sub-header h2{font-size:1.3rem}
+  .icon-btn{
+    width:38px; height:38px; border-radius:50%; border:1px solid var(--border);
+    background:var(--surface); color:var(--text); font-size:1.1rem; display:flex; align-items:center; justify-content:center;
+    flex:none;
+  }
+  .diff-mascot-wrap{margin-top:14px}
+  .diff-grid{display:grid; gap:12px; margin-top:18px; grid-template-columns:1fr}
+  @media (min-width:480px){ .diff-grid{grid-template-columns:1fr 1fr} }
+  .diff-card{
+    text-align:left; border-radius:18px; padding:16px; border:1.5px solid var(--border);
+    background:var(--surface); display:flex; flex-direction:column; gap:6px; min-width:0;
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  .diff-card:hover{transform:translateY(-2px); border-color:var(--accent)}
+  .diff-pips{display:flex; gap:4px}
+  .diff-pip{width:16px; height:6px; border-radius:3px; background:var(--surface-2)}
+  .diff-pip.filled{background:var(--accent)}
+  .diff-card h3{font-size:1.05rem; color:var(--accent)}
+  .diff-card p{color:var(--muted); font-size:.86rem}
+
+  /* ---------- Game screen ---------- */
+  .game-header{display:flex; align-items:center; gap:10px; padding-top:calc(env(safe-area-inset-top,0px) + 4px)}
+  .hud{display:flex; align-items:center; gap:14px; flex:1; min-width:0; flex-wrap:wrap}
+  .hud-item{font-size:.86rem; color:var(--muted); display:flex; align-items:center; gap:6px; white-space:nowrap}
+  .hud-item.score{font-weight:700; color:var(--text); font-variant-numeric:tabular-nums}
+  #hearts{display:flex; gap:3px}
+  .heart{width:18px; height:18px}
+  .heart.full path{fill:var(--danger); stroke:var(--danger)}
+  .heart.empty path{fill:none; stroke:var(--muted); stroke-width:1.6}
+  .streak-badge{
+    font-weight:700; color:var(--algebra-ink); background:var(--algebra);
+    padding:2px 9px; border-radius:999px; font-size:.78rem; font-variant-numeric:tabular-nums;
+  }
+  .progress-text{font-size:.82rem; color:var(--muted); font-variant-numeric:tabular-nums; flex:none}
+
+  .timer-track{height:6px; border-radius:999px; background:var(--surface-2); margin-top:12px; overflow:hidden}
+  .timer-bar{height:100%; width:100%; background:linear-gradient(90deg, var(--geometry), var(--algebra)); border-radius:999px}
+
+  .question-card{
+    margin-top:18px; background:var(--surface); border:1px solid var(--border);
+    border-radius:22px; padding:20px; min-width:0;
+  }
+  .question-text{font-size:1.18rem; font-weight:600; line-height:1.45}
+  .question-text b{color:var(--algebra)}
+
+  .shape-wrap{margin-top:14px; border-radius:16px; background:var(--surface-2); padding:8px}
+  .shape-svg{width:100%; height:auto; display:block; max-width:100%}
+  .dim-label{font-family:var(--font-body); font-size:13px; fill:var(--muted); font-weight:600}
+
+  .options-grid{display:grid; gap:10px; margin-top:18px; grid-template-columns:1fr}
+  @media (min-width:420px){ .options-grid{grid-template-columns:1fr 1fr} }
+  .option-btn{
+    text-align:left; padding:14px 16px; border-radius:14px; border:1.5px solid var(--border);
+    background:var(--surface-2); color:var(--text); font-size:1rem; font-weight:600;
+    min-width:0; overflow-wrap:anywhere; transition:transform .1s ease, border-color .15s ease, background .15s ease;
+  }
+  .option-btn:not(:disabled):hover{border-color:var(--geometry); transform:translateY(-1px)}
+  .option-btn:disabled{cursor:default}
+  .option-btn.correct{background:color-mix(in srgb, var(--success) 22%, var(--surface-2)); border-color:var(--success); animation:pop .35s ease}
+  .option-btn.wrong{background:color-mix(in srgb, var(--danger) 22%, var(--surface-2)); border-color:var(--danger); animation:shake .35s ease}
+  @keyframes pop{0%{transform:scale(1)} 40%{transform:scale(1.04)} 100%{transform:scale(1)}}
+  @keyframes shake{0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)}}
+
+  .feedback-banner{
+    margin-top:14px; padding:10px 14px; border-radius:12px; font-weight:700; font-size:.92rem;
+    opacity:0; transform:translateY(4px); transition:opacity .2s ease, transform .2s ease;
+  }
+  .feedback-banner.show{opacity:1; transform:none}
+  .feedback-banner.good{background:color-mix(in srgb, var(--success) 18%, transparent); color:var(--success)}
+  .feedback-banner.bad{background:color-mix(in srgb, var(--danger) 18%, transparent); color:var(--danger)}
+
+  .explanation-panel{
+    margin-top:12px; padding:14px 16px; border-radius:14px; background:var(--surface-2);
+    border:1px solid var(--border); opacity:0; transform:translateY(4px); transition:opacity .25s ease, transform .25s ease;
+  }
+  .explanation-panel.show{opacity:1; transform:none}
+  .explanation-label{font-size:.72rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--geometry)}
+  .explanation-text{margin-top:6px; font-size:.92rem; color:var(--muted); line-height:1.5}
+  .explanation-text b{color:var(--text)}
+  .btn-continue{display:block; width:100%; margin-top:14px}
+
+  /* ---------- End screen ---------- */
+  .end-card{
+    margin-top:28px; background:var(--surface); border:1px solid var(--border); border-radius:22px;
+    padding:28px 22px; text-align:center;
+  }
+  .end-stars{display:flex; justify-content:center; gap:6px; margin:12px 0 6px}
+  .end-stars svg{width:34px; height:34px}
+  .end-stars svg.lit path{fill:var(--algebra); stroke:var(--algebra)}
+  .end-stars svg.dim path{fill:none; stroke:var(--muted); stroke-width:1.5}
+  .end-stars svg.pop{animation:star-pop .5s cubic-bezier(.17,.89,.32,1.49)}
+  @keyframes star-pop{0%{transform:scale(.2) rotate(-25deg)} 70%{transform:scale(1.25) rotate(8deg)} 100%{transform:scale(1) rotate(0)}}
+  .end-card h2{font-size:1.5rem}
+  .end-score{margin-top:10px; color:var(--muted)}
+  .end-score strong{color:var(--text); font-size:1.2rem; font-variant-numeric:tabular-nums}
+  .end-diff, .end-best{margin-top:4px; color:var(--muted); font-size:.9rem}
+  .end-best strong{color:var(--geometry); font-variant-numeric:tabular-nums}
+  .end-diff strong{color:var(--algebra)}
+  .end-actions{display:flex; gap:10px; justify-content:center; margin-top:22px; flex-wrap:wrap}
+  .btn-primary, .btn-secondary{padding:12px 20px; border-radius:999px; font-weight:700; font-size:.95rem; border:1.5px solid transparent}
+  .btn-primary{background:linear-gradient(90deg, var(--algebra), var(--geometry)); color:#121128}
+  .btn-secondary{background:transparent; border-color:var(--border); color:var(--text)}
+
+  [hidden]{display:none !important}
+
+  /* ---------- Confetti ---------- */
+  .confetti-container{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:50}
+  .confetti-piece{position:absolute; top:-10px; width:8px; height:14px; border-radius:2px; animation:confetti-fall linear forwards}
+  @keyframes confetti-fall{ to{ transform:translateY(110vh) rotate(540deg); opacity:.9 } }
+
+  /* ---------- Random student picker ---------- */
+  .mode-card.random{background:linear-gradient(135deg, rgba(73,217,196,.12), rgba(255,182,72,.12))}
+  .mode-card.random .mode-icon{background:linear-gradient(135deg, var(--geometry), var(--algebra)); color:var(--bg-deep)}
+  .mode-card.random .play-label{color:var(--success)}
+  .mode-card.random:hover{border-color:var(--success); box-shadow:0 10px 30px -14px rgba(107,227,166,.35)}
+
+  .student-manager{margin-top:16px; background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:16px}
+  .student-input-row{display:flex; gap:8px}
+  .student-input-row input{
+    flex:1; min-width:0; padding:10px 12px; border-radius:12px; border:1.5px solid var(--border);
+    background:var(--surface-2); color:var(--text); font-size:.95rem; font-family:inherit;
+  }
+  .student-input-row input::placeholder{color:var(--muted)}
+  .student-input-row button{
+    padding:10px 16px; border-radius:12px; border:none; background:var(--geometry); color:var(--geometry-ink); font-weight:700;
+  }
+  .student-chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px}
+  .chip{
+    display:flex; align-items:center; gap:6px; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:999px; padding:6px 8px 6px 14px; font-size:.88rem; font-weight:600;
+  }
+  .chip button{
+    width:20px; height:20px; border-radius:50%; border:none; background:transparent; color:var(--muted);
+    font-size:.9rem; line-height:1; display:flex; align-items:center; justify-content:center;
+  }
+  .chip button:hover{color:var(--danger)}
+  .student-count{margin-top:10px; font-size:.84rem; color:var(--muted)}
+  .student-error{margin-top:8px; font-size:.85rem; color:var(--danger); font-weight:600; min-height:1.1em}
+
+  .picker-style-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:16px}
+  @media (min-width:480px){ .picker-style-grid{grid-template-columns:repeat(3,1fr)} }
+  .picker-style-btn{
+    display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 8px; border-radius:16px;
+    border:1.5px solid var(--border); background:var(--surface); color:var(--muted); font-size:.82rem; font-weight:700;
+  }
+  .picker-style-btn svg{width:30px; height:30px}
+  .picker-style-btn.active{border-color:var(--success); color:var(--text); background:color-mix(in srgb, var(--success) 14%, var(--surface))}
+
+  .btn-start-pick{
+    display:block; width:100%; margin-top:18px; padding:14px; border-radius:999px; border:none; font-weight:800; font-size:1rem;
+    background:linear-gradient(90deg, var(--geometry), var(--success)); color:var(--bg-deep);
+  }
+  .btn-start-pick:disabled{opacity:.5}
+
+  .spin-stage{margin-top:20px; display:flex; flex-direction:column; align-items:center; gap:16px; min-height:260px; justify-content:center}
+  .spin-display{
+    font-family:var(--font-display); font-size:1.5rem; font-weight:700; color:var(--text); text-align:center;
+    background:var(--surface-2); border:2px dashed var(--border); border-radius:16px; padding:16px 22px; min-width:70%; overflow-wrap:anywhere;
+  }
+
+  .stage-start-btn{
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    padding:14px 22px; border-radius:999px; border:none; font-weight:800; font-size:.98rem;
+    background:linear-gradient(90deg, var(--geometry), var(--success)); color:var(--bg-deep);
+    box-shadow:0 8px 24px -8px rgba(0,0,0,.5); z-index:3; white-space:nowrap;
+  }
+  .stage-start-btn:active{transform:translate(-50%,-50%) scale(.94)}
+
+  /* Drum: physics-based lottery machine */
+  .drum-canvas-wrap{position:relative; width:260px; height:220px}
+  #drum-canvas{width:260px; height:220px; display:block}
+
+  /* Box */
+  .box-wrap{display:block}
+  @keyframes box-shake{0%,100%{transform:translateX(0) rotate(0)} 25%{transform:translateX(-4px) rotate(-3deg)} 75%{transform:translateX(4px) rotate(3deg)}}
+
+  /* Dice */
+  .dice-stage{perspective:420px}
+  .dice-cube{transform-style:preserve-3d; transition:transform .34s ease-out}
+
+  /* Hook: user-controlled "steal an egg" style claw */
+  .hook-game{position:relative; width:100%; max-width:320px; height:220px; margin:0 auto}
+  .hook-rail{position:absolute; top:0; left:0; right:0; height:3px; background:var(--border); border-radius:2px}
+  .hook-trolley{position:absolute; top:0; width:28px; height:14px; margin-left:-14px}
+  .hook-trolley svg{width:100%; height:100%}
+  .hook-rope{position:absolute; top:12px; width:2px; background:var(--muted)}
+  .hook-claw{position:absolute; width:30px; height:22px; margin-left:-15px}
+  .hook-claw svg{width:100%; height:100%}
+  .egg-track{position:absolute; bottom:4px; left:0; right:0; display:flex; justify-content:space-between; align-items:flex-end; padding:0 4px}
+  .egg{display:flex; flex-direction:column; align-items:center; gap:4px; width:44px; min-width:0}
+  .egg-shape{width:32px; height:40px; border-radius:50% 50% 46% 46% / 58% 58% 42% 42%; background:var(--surface-2); border:2px solid var(--geometry); transition:opacity .25s ease, transform .25s ease}
+  .egg.caught .egg-shape{opacity:0; transform:scale(.25) translateY(-10px)}
+  .egg-name{font-size:.6rem; color:var(--muted); font-weight:700; text-align:center; max-width:44px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .hook-hint{margin-top:10px; font-size:.84rem; color:var(--muted); text-align:center}
+  .btn-drop{
+    display:block; margin:14px auto 0; padding:12px 26px; border-radius:999px; border:none; font-weight:800;
+    background:linear-gradient(90deg, var(--algebra), var(--danger)); color:#2a0b0b; font-size:.98rem;
+  }
+  .btn-drop:active{transform:scale(.95)}
+  .btn-drop:disabled{opacity:.55}
+
+  .wheel-outer{position:relative; width:220px; margin:0 auto}
+  .wheel-pointer{position:absolute; top:-10px; left:50%; transform:translateX(-50%); width:0; height:0;
+    border-left:10px solid transparent; border-right:10px solid transparent; border-top:16px solid var(--danger); z-index:2}
+  #wheel-g{transform-origin:110px 110px}
+
+  .reveal-panel{margin-top:22px; text-align:center}
+  .reveal-name{font-family:var(--font-display); font-size:1.8rem; font-weight:800; color:var(--text)}
+  .reveal-badges{display:flex; gap:14px; justify-content:center; margin-top:18px; flex-wrap:wrap}
+  .reveal-badge{
+    min-width:150px; padding:18px; border-radius:18px; background:var(--surface-2); border:1.5px solid var(--border); text-align:center;
+  }
+  .reveal-badge-label{font-size:.78rem; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; font-weight:700}
+  .reveal-badge-value{font-family:var(--font-display); font-size:1.2rem; font-weight:700; color:var(--text); margin-top:6px; min-height:1.3em}
+
+  .student-tag{
+    display:inline-flex; align-items:center; gap:6px; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:999px; padding:4px 12px; font-size:.82rem; font-weight:700; color:var(--geometry); margin-bottom:12px;
+  }
+
+  /* ---------- Streak celebrations ---------- */
+  .combo-layer{position:fixed; inset:0; pointer-events:none; z-index:60; display:flex; align-items:center; justify-content:center}
+  .combo-banner{
+    font-family:var(--font-display); font-weight:800; text-align:center; padding:14px 26px; border-radius:22px;
+    opacity:0; transform:scale(.5); white-space:nowrap;
+    display:flex; align-items:center; gap:12px;
+  }
+  .combo-banner .combo-mascot{width:52px; height:52px; flex:none}
+  .combo-banner .combo-mascot svg{width:100%; height:100%; animation:combo-mascot-bounce .55s ease-in-out infinite}
+  .combo-banner.combo-5 .combo-mascot{width:64px; height:64px}
+  @keyframes combo-mascot-bounce{0%,100%{transform:translateY(0) rotate(-3deg)} 50%{transform:translateY(-6px) rotate(3deg)}}
+  .combo-banner.show{animation:combo-pop 2s cubic-bezier(.2,.8,.2,1) forwards}
+  @keyframes combo-pop{
+    0%{opacity:0; transform:scale(.5) rotate(-4deg)}
+    15%{opacity:1; transform:scale(1.14) rotate(2deg)}
+    28%{transform:scale(1) rotate(0)}
+    78%{opacity:1; transform:scale(1)}
+    100%{opacity:0; transform:scale(.92) translateY(-16px)}
+  }
+  .combo-banner.combo-3{
+    font-size:1.5rem; color:var(--algebra-ink); background:linear-gradient(135deg, var(--algebra), #ffd38a);
+    box-shadow:0 0 44px var(--algebra-glow);
+  }
+  .combo-banner.combo-5{
+    font-size:1.9rem; color:#0c0b1d; background:linear-gradient(135deg, var(--geometry), var(--algebra), var(--success));
+    box-shadow:0 0 70px rgba(255,255,255,.3);
+  }
+  .screen-pulse{position:fixed; inset:0; pointer-events:none; z-index:55; opacity:0}
+  .screen-pulse.show{animation:pulse-fade 1.5s ease-out forwards}
+  @keyframes pulse-fade{0%{opacity:.6} 100%{opacity:0}}
+  .flash-sweep{
+    position:fixed; top:0; left:-60%; width:55%; height:100%; pointer-events:none; z-index:56;
+    background:linear-gradient(100deg, transparent, rgba(255,255,255,.35), transparent); opacity:0;
+  }
+  .flash-sweep.show{animation:sweep-move 1.5s ease-out forwards}
+  @keyframes sweep-move{0%{left:-60%; opacity:0} 18%{opacity:1} 100%{left:120%; opacity:0}}
+  @media (prefers-reduced-motion: reduce){
+    .combo-banner.show, .screen-pulse.show, .flash-sweep.show{animation:none; opacity:0}
+  }
+
+  /* ---------- Ambient background ---------- */
+  .bg-fx{position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none}
+  .bg-blob{position:absolute; border-radius:50%; filter:blur(60px); opacity:.5; animation:blob-drift linear infinite}
+  .bg-blob.b1{width:46vmax; height:46vmax; left:-14vmax; top:-18vmax; background:radial-gradient(circle, rgba(255,182,72,.55), transparent 70%); animation-duration:26s}
+  .bg-blob.b2{width:50vmax; height:50vmax; right:-18vmax; top:4vmax; background:radial-gradient(circle, rgba(73,217,196,.5), transparent 70%); animation-duration:32s; animation-direction:reverse}
+  .bg-blob.b3{width:38vmax; height:38vmax; left:18vmax; bottom:-20vmax; background:radial-gradient(circle, rgba(107,227,166,.4), transparent 70%); animation-duration:38s}
+  @keyframes blob-drift{
+    0%{transform:translate(0,0) scale(1)}
+    33%{transform:translate(4vmax,3vmax) scale(1.08)}
+    66%{transform:translate(-3vmax,4vmax) scale(.96)}
+    100%{transform:translate(0,0) scale(1)}
+  }
+  .bg-star{position:absolute; width:3px; height:3px; border-radius:50%; background:#fff; animation:star-twinkle ease-in-out infinite}
+  @keyframes star-twinkle{0%,100%{opacity:.15; transform:scale(1)} 50%{opacity:.95; transform:scale(1.6)}}
+  .bg-symbol{
+    position:absolute; bottom:-10%; font-family:var(--font-display); font-weight:700; color:var(--geometry);
+    opacity:0; animation:symbol-float linear infinite;
+  }
+  @keyframes symbol-float{
+    0%{opacity:0; transform:translateY(0) rotate(0deg)}
+    8%{opacity:.5}
+    85%{opacity:.4}
+    100%{opacity:0; transform:translateY(-112vh) rotate(60deg)}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .bg-blob, .bg-star, .bg-symbol{animation:none !important; opacity:0}
+  }
+</style>
+
+<div class="bg-fx" id="bg-fx" aria-hidden="true">
+  <div class="bg-blob b1"></div>
+  <div class="bg-blob b2"></div>
+  <div class="bg-blob b3"></div>
+  <div id="bg-stars"></div>
+  <div id="bg-symbols"></div>
+</div>
+<div class="confetti-container" id="confetti" aria-hidden="true"></div>
+<div class="combo-layer" id="combo-layer" aria-hidden="true"></div>
+
+<main class="app">
+
+  <section class="screen" id="screen-start">
+    <div class="hero">
+      <div class="hero-inner">
+        <p class="eyebrow">Matematik oʻyin</p>
+        <h1 class="title">Son va Shakl</h1>
+        <p class="subtitle">Algebra sirlarini yeching, geometriya shakllarini zabt eting. Doʻstingiz Sonchik yoningizda — u har bosqichda his-tuygʻularini bildiradi!</p>
+        <div class="mascot-box lg" style="margin-top:10px">
+          <div id="mascot-start"></div>
+          <p class="mascot-speech" id="mascot-start-speech"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mode-grid">
+      <button class="mode-card algebra" data-mode="algebra">
+        <div class="mode-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h5M4 18h5M4.5 6l6 12M10.5 6l-6 12"/><path d="M14 9c1.2-2 4.6-2 5.4 0 .8 2-1.4 2.8-2.7 4-1.3 1.2-2.7 2-2.7 4h6"/></svg>
+        </div>
+        <h2>Algebra olami</h2>
+        <p>Tenglamalar, ketma-ketliklar, foizlar va tezkor hisob-kitoblar</p>
+        <div class="mode-best">Eng yaxshi natija: <span id="best-algebra">0</span></div>
+        <span class="play-label">Oʻynashni boshlash →</span>
+      </button>
+
+      <button class="mode-card geometry" data-mode="geometry">
+        <div class="mode-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><circle cx="7" cy="7" r="4"/><rect x="13" y="3" width="8" height="8" rx="1"/><path d="M3 21l6-10 6 10z"/></svg>
+        </div>
+        <h2>Geometriya olami</h2>
+        <p>Yuzlar, aylana, burchaklar va shakllar sirlari</p>
+        <div class="mode-best">Eng yaxshi natija: <span id="best-geometry">0</span></div>
+        <span class="play-label">Oʻynashni boshlash →</span>
+      </button>
+
+      <button class="mode-card random" id="mode-card-random" type="button">
+        <div class="mode-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>
+        </div>
+        <h2>Kim navbatda?</h2>
+        <p>Sinfdan tasodifiy oʻquvchini tanlang va unga savol tushsin</p>
+        <div class="mode-best">Roʻyxatda: <span id="student-count-mini">0</span> oʻquvchi</div>
+        <span class="play-label">Tanlashni boshlash →</span>
+      </button>
+    </div>
+
+    <p class="hint">Har bir bosqich 10 ta savoldan iborat. Qiyinlik darajasini oʻzingiz tanlaysiz — Osondan Imkonsizgacha!</p>
+  </section>
+
+  <section class="screen" id="screen-difficulty" hidden>
+    <header class="sub-header">
+      <button class="icon-btn" id="btn-diff-back" aria-label="Orqaga">‹</button>
+      <h2 id="diff-mode-label">Olam</h2>
+    </header>
+    <div class="diff-mascot-wrap mascot-box">
+      <div id="mascot-diff"></div>
+      <p class="mascot-speech" id="mascot-diff-speech"></p>
+    </div>
+    <div class="diff-grid" id="diff-grid"></div>
+  </section>
+
+  <section class="screen" id="screen-game" hidden>
+    <header class="game-header">
+      <button class="icon-btn" id="btn-quit" aria-label="Bosh menyuga qaytish">‹</button>
+      <div class="hud">
+        <div class="hud-item" id="hearts"></div>
+        <div class="hud-item score">Ball: <span id="score-val">0</span></div>
+        <div class="hud-item" id="streak-wrap" hidden><span class="streak-badge" id="streak-val">Seriya ×1</span></div>
+      </div>
+      <div class="progress-text"><span id="progress-val">1</span>/10</div>
+    </header>
+
+    <div class="timer-track"><div class="timer-bar" id="timer-bar"></div></div>
+
+    <div class="question-card">
+      <div class="student-tag" id="student-tag" hidden>Navbat: <span id="student-tag-name"></span></div>
+      <div class="mascot-row">
+        <div class="mascot-mini" id="mascot-game"></div>
+        <p class="mascot-speech-inline" id="mascot-game-speech"></p>
+      </div>
+      <p class="question-text" id="question-text"></p>
+      <div class="shape-wrap" id="shape-wrap" hidden></div>
+      <div class="options-grid" id="options-grid"></div>
+      <div class="feedback-banner" id="feedback"></div>
+      <div class="explanation-panel" id="explanation-panel" hidden>
+        <div class="explanation-label">Yechim</div>
+        <p class="explanation-text" id="explanation-text"></p>
+      </div>
+      <button class="btn-primary btn-continue" id="btn-next-question" hidden>Keyingi savol →</button>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-end" hidden>
+    <div class="end-card">
+      <div class="mascot-box" id="mascot-end-wrap">
+        <div id="mascot-end"></div>
+        <p class="mascot-speech" id="mascot-end-speech"></p>
+      </div>
+      <div class="end-stars" id="end-stars"></div>
+      <h2 id="end-title">Ajoyib natija!</h2>
+      <p class="end-score">Yakuniy ball: <strong id="end-score-val">0</strong></p>
+      <p class="end-diff">Qiyinlik: <strong id="end-diff-val">—</strong></p>
+      <p class="end-best">Shu olamdagi eng yaxshi natija: <strong id="end-best-val">0</strong></p>
+      <div class="end-actions">
+        <button class="btn-primary" id="btn-again">Qayta oʻynash</button>
+        <button class="btn-secondary" id="btn-menu">Bosh menyu</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-random-home" hidden>
+    <header class="sub-header">
+      <button class="icon-btn" id="btn-random-home-back" aria-label="Orqaga">‹</button>
+      <h2>Kim navbatda?</h2>
+    </header>
+    <div class="mascot-box" style="margin-top:10px">
+      <div id="mascot-randomhome"></div>
+      <p class="mascot-speech" id="mascot-randomhome-speech"></p>
+    </div>
+
+    <div class="student-manager">
+      <div class="student-input-row">
+        <input id="student-input" type="text" maxlength="24" placeholder="Oʻquvchi ismini kiriting" />
+        <button type="button" id="btn-add-student">Qoʻshish</button>
+      </div>
+      <div class="student-chips" id="student-chips"></div>
+      <p class="student-count" id="student-count-label"></p>
+      <p class="student-error" id="student-error"></p>
+    </div>
+
+    <h3 style="margin-top:20px; font-size:1.05rem">Qanday tanlaymiz?</h3>
+    <div class="picker-style-grid" id="picker-style-grid"></div>
+
+    <button class="btn-start-pick" id="btn-start-pick" type="button">Tasodifiy oʻquvchini tanlash</button>
+  </section>
+
+  <section class="screen" id="screen-spin" hidden>
+    <header class="sub-header">
+      <button class="icon-btn" id="btn-spin-back" aria-label="Orqaga">‹</button>
+      <h2 id="spin-title">Tanlanmoqda...</h2>
+    </header>
+    <div class="spin-stage" id="spin-stage"></div>
+    <div class="reveal-panel" id="reveal-panel" hidden>
+      <div class="mascot-box" id="mascot-spin-reveal-wrap">
+        <div id="mascot-spin"></div>
+      </div>
+      <p class="reveal-name" id="reveal-name"></p>
+      <button class="btn-primary" id="btn-spin-continue" style="margin-top:18px">Davom etish →</button>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-type-reveal" hidden>
+    <header class="sub-header">
+      <h2>Savol turi aniqlanmoqda...</h2>
+    </header>
+    <div class="mascot-box" style="margin-top:6px">
+      <div id="mascot-typereveal"></div>
+      <p class="mascot-speech" id="mascot-typereveal-speech"></p>
+    </div>
+    <div class="reveal-badges">
+      <div class="reveal-badge">
+        <div class="reveal-badge-label">Olam</div>
+        <div class="reveal-badge-value" id="reveal-mode-text">?</div>
+      </div>
+      <div class="reveal-badge">
+        <div class="reveal-badge-label">Qiyinlik</div>
+        <div class="reveal-badge-value" id="reveal-diff-text">?</div>
+      </div>
+    </div>
+    <button class="btn-primary" id="btn-start-random-question" style="display:block; margin:22px auto 0" hidden>Savolni boshlash →</button>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  var TOTAL_Q = 10;
+
+  var DIFFICULTIES = {
+    oson:     { key:'oson',     label:'Oson',      desc:'Boshlovchilar uchun — koʻp vaqt va 4 ta jon.',        lives:4, time:18000, levelStart:1, scoreMult:1,   hoverEmotion:'happy',      hoverSpeech:'Yengil va qulay boshlanish!' },
+    orta:     { key:'orta',     label:'Oʻrta',     desc:'Standart qiyinlik — yaxshi balans.',                   lives:3, time:14000, levelStart:2, scoreMult:1.3, hoverEmotion:'wave',       hoverSpeech:'Klassik tajriba, davom eting!' },
+    qiyin:    { key:'qiyin',    label:'Qiyin',     desc:'Kattaroq sonlar, qisqaroq vaqt, 2 ta jon.',            lives:2, time:10000, levelStart:3, scoreMult:1.7, hoverEmotion:'thinking',   hoverSpeech:'Diqqatni jamlang, bu qiyinroq!' },
+    imkonsiz: { key:'imkonsiz', label:'Imkonsiz',  desc:'Bitta xato — oʻyin tugaydi. Faqat ustalar uchun!',     lives:1, time:7000,  levelStart:4, scoreMult:2.5, hoverEmotion:'determined', hoverSpeech:'Imkonsiz — faqat chinakam ustalar uchun!' }
+  };
+  var DIFF_ORDER = ['oson','orta','qiyin','imkonsiz'];
+
+  var els = {
+    start: document.getElementById('screen-start'),
+    difficulty: document.getElementById('screen-difficulty'),
+    game: document.getElementById('screen-game'),
+    end: document.getElementById('screen-end'),
+    bestAlgebra: document.getElementById('best-algebra'),
+    bestGeometry: document.getElementById('best-geometry'),
+    diffModeLabel: document.getElementById('diff-mode-label'),
+    diffGrid: document.getElementById('diff-grid'),
+    hearts: document.getElementById('hearts'),
+    scoreVal: document.getElementById('score-val'),
+    streakWrap: document.getElementById('streak-wrap'),
+    streakVal: document.getElementById('streak-val'),
+    progressVal: document.getElementById('progress-val'),
+    timerBar: document.getElementById('timer-bar'),
+    questionText: document.getElementById('question-text'),
+    shapeWrap: document.getElementById('shape-wrap'),
+    optionsGrid: document.getElementById('options-grid'),
+    feedback: document.getElementById('feedback'),
+    explanationPanel: document.getElementById('explanation-panel'),
+    explanationText: document.getElementById('explanation-text'),
+    btnNextQuestion: document.getElementById('btn-next-question'),
+    endStars: document.getElementById('end-stars'),
+    endTitle: document.getElementById('end-title'),
+    endScoreVal: document.getElementById('end-score-val'),
+    endDiffVal: document.getElementById('end-diff-val'),
+    endBestVal: document.getElementById('end-best-val'),
+    confetti: document.getElementById('confetti')
+  };
+
+  var screenEls = {
+    start: els.start, difficulty: els.difficulty, game: els.game, end: els.end,
+    randomHome: document.getElementById('screen-random-home'),
+    spin: document.getElementById('screen-spin'),
+    typeReveal: document.getElementById('screen-type-reveal')
+  };
+
+  var state = {
+    mode:null, diffKey:null, diff:null, idx:0, score:0, streak:0, lives:3, current:null, timerTimeout:null, mascotTimeout:null,
+    students:[], pickerStyle:'wheel', targetIndex:0, chosenStudent:null, activeStudent:null, spinTimeout:null, revealMode:null, revealDiffKey:null
+  };
+  var best = { algebra:0, geometry:0 };
+
+  function loadBest(){
+    try{
+      var raw = localStorage.getItem('sonvashakl-best');
+      if(raw){ var parsed = JSON.parse(raw); best.algebra = parsed.algebra||0; best.geometry = parsed.geometry||0; }
+    }catch(e){}
+    els.bestAlgebra.textContent = best.algebra;
+    els.bestGeometry.textContent = best.geometry;
+  }
+  function saveBest(){ try{ localStorage.setItem('sonvashakl-best', JSON.stringify(best)); }catch(e){} }
+
+  function showScreen(name){
+    Object.keys(screenEls).forEach(function(k){ screenEls[k].hidden = (k!==name); });
+  }
+
+  function rnd(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+  function pick(arr){ return arr[rnd(0, arr.length-1)]; }
+  function shuffle(arr){
+    for(var i=arr.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=arr[i]; arr[i]=arr[j]; arr[j]=t; }
+    return arr;
+  }
+
+  function makeNumericOptions(correct, spread, unit){
+    var set = [correct];
+    var guard = 0;
+    while(set.length<4 && guard<80){
+      guard++;
+      var delta = rnd(1, Math.max(2,spread)) * (Math.random()<0.5?-1:1);
+      var val = correct+delta;
+      if(val>=0 && set.indexOf(val)===-1) set.push(val);
+    }
+    var fb=1;
+    while(set.length<4){ var v=correct+fb; if(set.indexOf(v)===-1) set.push(v); fb++; }
+    shuffle(set);
+    var strs = set.map(function(n){ return unit ? (n+' '+unit) : String(n); });
+    var correctStr = unit ? (correct+' '+unit) : String(correct);
+    return { options: strs, correctIndex: strs.indexOf(correctStr) };
+  }
+
+  /* ---------- SVG shape renderers (questions) ---------- */
+  function svgRect(w,h){
+    var sc = Math.max(8, Math.min(16, 150/w, 100/h));
+    var rw=w*sc, rh=h*sc, x=(240-rw)/2, y=(150-rh)/2;
+    return '<svg viewBox="0 0 240 170" class="shape-svg">'+
+      '<rect x="'+x+'" y="'+y+'" width="'+rw+'" height="'+rh+'" fill="var(--surface)" stroke="var(--geometry)" stroke-width="3" rx="4"/>'+
+      '<text x="'+(x+rw/2)+'" y="'+(y+rh+22)+'" class="dim-label" text-anchor="middle">'+w+' sm</text>'+
+      '<text x="'+(x-16)+'" y="'+(y+rh/2+4)+'" class="dim-label" text-anchor="middle" transform="rotate(-90 '+(x-16)+' '+(y+rh/2)+')">'+h+' sm</text>'+
+    '</svg>';
+  }
+  function svgTriangle(base,height){
+    var sc = Math.max(6, Math.min(14, 150/base, 95/height));
+    var bw=base*sc, hh=height*sc, x1=(240-bw)/2, x2=x1+bw, yb=135, ax=(x1+x2)/2, ay=yb-hh;
+    return '<svg viewBox="0 0 240 170" class="shape-svg">'+
+      '<polygon points="'+x1+','+yb+' '+x2+','+yb+' '+ax+','+ay+'" fill="var(--surface)" stroke="var(--geometry)" stroke-width="3"/>'+
+      '<line x1="'+ax+'" y1="'+ay+'" x2="'+ax+'" y2="'+yb+'" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 3"/>'+
+      '<text x="'+ax+'" y="'+(yb+22)+'" class="dim-label" text-anchor="middle">'+base+' sm</text>'+
+      '<text x="'+(ax+16)+'" y="'+((ay+yb)/2)+'" class="dim-label" text-anchor="start">'+height+' sm</text>'+
+    '</svg>';
+  }
+  function svgCircle(r){
+    var sc = Math.max(8, Math.min(18, 65/r));
+    var rr=r*sc, cx=120, cy=85;
+    return '<svg viewBox="0 0 240 170" class="shape-svg">'+
+      '<circle cx="'+cx+'" cy="'+cy+'" r="'+rr+'" fill="var(--surface)" stroke="var(--geometry)" stroke-width="3"/>'+
+      '<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+rr)+'" y2="'+cy+'" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 3"/>'+
+      '<text x="'+(cx+rr/2)+'" y="'+(cy-8)+'" class="dim-label" text-anchor="middle">'+r+' sm</text>'+
+    '</svg>';
+  }
+  function svgAngleTriangle(a1,a2){
+    return '<svg viewBox="0 0 240 170" class="shape-svg">'+
+      '<polygon points="40,138 200,138 110,38" fill="var(--surface)" stroke="var(--geometry)" stroke-width="3"/>'+
+      '<text x="58" y="128" class="dim-label" text-anchor="middle">'+a1+'°</text>'+
+      '<text x="182" y="128" class="dim-label" text-anchor="middle">'+a2+'°</text>'+
+      '<text x="110" y="52" class="dim-label" text-anchor="middle">?</text>'+
+    '</svg>';
+  }
+
+  /* ---------- Algebra generators ---------- */
+  function gcdFn(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ var t=b; b=a%b; a=t; } return a||1; }
+  function isPrime(n){ if(n<2) return false; for(var i=2;i*i<=n;i++){ if(n%i===0) return false; } return true; }
+
+  /* === 1. Natural sonlar ustida amallar (qulay usul) === */
+  function genNaturalConvenient(level){
+    function pairRound(){
+      var a = rnd(12, 38+level*5);
+      var rem = a%10;
+      var b = rem===0 ? 10 : (10-rem);
+      return [a,b];
+    }
+    var p1 = pairRound(), p2 = pairRound();
+    var nums = shuffle([p1[0], p2[0], p1[1], p2[1]].slice());
+    var round1 = p1[0]+p1[1], round2 = p2[0]+p2[1];
+    var sum = round1+round2;
+    var r = makeNumericOptions(sum, 8+level*3);
+    var expl = 'Qulay usul: sonlarni oʻnlikka toʻliq boʻladigan juftlarga guruhlaymiz: <b>('+p1[0]+' + '+p1[1]+') + ('+p2[0]+' + '+p2[1]+') = '+round1+' + '+round2+' = '+sum+'</b>.';
+    return { prompt: nums.join(' + ')+' = ? (qulay usulda hisoblang)', svg:null, options:r.options, correctIndex:r.correctIndex, explanation:expl };
+  }
+
+  /* === 2. Boʻlinish belgilari, tub va murakkab sonlar === */
+  function genDivisibility(level){
+    var mode = pick(['div3','div9','div4','prime']);
+    if(mode==='prime'){
+      var primesPool = [11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97].filter(function(p){ return p<=40+level*12; });
+      if(primesPool.length===0) primesPool=[11,13,17,19];
+      var correctVal = pick(primesPool);
+      var composites = [];
+      while(composites.length<3){
+        var c = rnd(10, 40+level*12);
+        if(!isPrime(c) && composites.indexOf(c)===-1 && c!==correctVal) composites.push(c);
+      }
+      var opts = shuffle([correctVal].concat(composites)).map(String);
+      var expl = '<b>'+correctVal+'</b> faqat 1 va oʻziga boʻlinadi — bu uni tub son qiladi. Qolganlari qoʻshimcha boʻluvchilarga ega, yaʼni murakkab son.';
+      return { prompt:'Quyidagi sonlardan qaysi biri tub son?', svg:null, options:opts, correctIndex:opts.indexOf(String(correctVal)), explanation:expl };
+    }
+    var divisor = mode==='div3'?3: mode==='div9'?9:4;
+    var correctVal2 = divisor * rnd(7+level, 20+level*3);
+    var wrongs = [];
+    var guard=0;
+    while(wrongs.length<3 && guard<40){
+      guard++;
+      var w = correctVal2 + rnd(1,divisor-1) + rnd(0,3)*divisor;
+      if(w%divisor===0) w += 1;
+      if(wrongs.indexOf(w)===-1 && w!==correctVal2) wrongs.push(w);
+    }
+    var opts2 = shuffle([correctVal2].concat(wrongs)).map(String);
+    var ruleText = divisor===3 ? 'raqamlari yigʻindisi 3 ga boʻlinadi' : divisor===9 ? 'raqamlari yigʻindisi 9 ga boʻlinadi' : 'oxirgi ikki raqami 4 ga boʻlinadi';
+    var digitSum = String(correctVal2).split('').reduce(function(s,d){ return s+Number(d); },0);
+    var expl2 = 'Boʻlinish belgisi: '+ruleText+'. <b>'+correctVal2+'</b> uchun bu shart bajariladi (raqamlar yigʻindisi: '+digitSum+').';
+    return { prompt:'Quyidagi sonlardan qaysi biri '+divisor+' ga boʻlinadi?', svg:null, options:opts2, correctIndex:opts2.indexOf(String(correctVal2)), explanation:expl2 };
+  }
+
+  /* === 6. Oddiy va oʻnli kasrlar === */
+  function genFractions(level){
+    var type = pick(['compare','add']);
+    if(type==='compare'){
+      var num = rnd(1,9), den = rnd(num+1, num+5+level);
+      var fracVal = num/den;
+      var dec = Math.round(fracVal*100)/100;
+      dec = Math.round((dec + (Math.random()<0.5?-1:1)*(0.05+Math.random()*0.15))*100)/100;
+      if(dec<=0) dec = Math.round((fracVal*0.5)*100)/100;
+      var fracStr = num+'/'+den;
+      var bigger = fracVal>dec ? fracStr : String(dec);
+      var opts = shuffle([fracStr, String(dec)]);
+      var expl = '<b>'+fracStr+'</b> ni oʻnli kasrga aylantiramiz: '+num+' ÷ '+den+' ≈ '+fracVal.toFixed(2)+'. Bu '+(fracVal>dec?'kattaroq':'kichikroq')+' ('+dec+' bilan solishtirganda).';
+      return { prompt:'Qaysi biri katta: <b>'+fracStr+'</b> yoki <b>'+dec+'</b>?', svg:null, options:opts, correctIndex:opts.indexOf(bigger), explanation:expl };
+    }
+    var d1 = pick([2,3,4,6]), d2 = pick([3,4,5,6]);
+    if(d2===d1) d2 = d1===6?5:d1+1;
+    var n1 = rnd(1,d1-1), n2 = rnd(1,d2-1);
+    var lcm = (d1*d2)/gcdFn(d1,d2);
+    var sumNum = n1*(lcm/d1) + n2*(lcm/d2);
+    var g = gcdFn(sumNum, lcm);
+    var simpNum = sumNum/g, simpDen = lcm/g;
+    var correctStr = simpDen===1 ? String(simpNum) : simpNum+'/'+simpDen;
+    var distract = [];
+    var guard2=0;
+    while(distract.length<3 && guard2<30){
+      guard2++;
+      var dn = Math.max(1, simpNum + rnd(-2,2)), dd = Math.max(1, simpDen + pick([0,0,1,-1]));
+      var s = dd===1?String(dn):(dn+'/'+dd);
+      if(s!==correctStr && distract.indexOf(s)===-1) distract.push(s);
+    }
+    var opts2 = shuffle([correctStr].concat(distract));
+    var expl2 = 'Umumiy maxraj: '+lcm+'. <b>'+n1+'/'+d1+' + '+n2+'/'+d2+' = '+(n1*(lcm/d1))+'/'+lcm+' + '+(n2*(lcm/d2))+'/'+lcm+' = '+sumNum+'/'+lcm+'</b>'+(g>1?' = '+correctStr+' (qisqartirib)':'')+'.';
+    return { prompt: n1+'/'+d1+' + '+n2+'/'+d2+' = ?', svg:null, options:opts2, correctIndex:opts2.indexOf(correctStr), explanation:expl2 };
+  }
+
+  /* === 7. Nisbat, proporsiya, qism va foiz === */
+  function genRatioPercent(level){
+    var type = pick(['percent','ratio']);
+    if(type==='percent'){
+      var base = rnd(4,16+level)*10;
+      var pct = pick([5,10,15,20,25,40,50,60,75]);
+      var result = base*pct/100;
+      var r = makeNumericOptions(result, Math.max(3, Math.round(result*0.25)+2));
+      var expl = base+' ning '+pct+'% i: <b>'+base+' × '+pct+' ÷ 100 = '+result+'</b>.';
+      return { prompt: base+' sonining '+pct+'% i nechaga teng?', svg:null, options:r.options, correctIndex:r.correctIndex, explanation:expl };
+    }
+    var a = rnd(2,6), b = rnd(a+1, a+6);
+    var k = rnd(2,6+level);
+    var A = a*k, B = b*k;
+    var r2 = makeNumericOptions(B, 4+level*2);
+    var expl2 = 'Nisbat A:B = '+a+':'+b+'. A = '+A+' boʻlgani uchun k = '+A+' ÷ '+a+' = '+k+'. Demak B = '+b+' × '+k+' = '+B+'.';
+    return { prompt:'A:B = '+a+':'+b+' nisbatda boʻlib, A = '+A+'. B nechaga teng?', svg:null, options:r2.options, correctIndex:r2.correctIndex, explanation:expl2 };
+  }
+
+  /* === 3. EKUB va EKUK === */
+  function genGcdLcm(level){
+    var a = rnd(8,20+level*4), b = rnd(8,20+level*4);
+    var useGcd = Math.random()<0.5;
+    var g = gcdFn(a,b), l = (a*b)/g;
+    var val = useGcd ? g : l;
+    var r = makeNumericOptions(val, useGcd? Math.max(3,g) : Math.max(6,Math.round(l*0.2)+4));
+    var expl = useGcd
+      ? (a+' va '+b+' sonlarining EKUBini Yevklid algoritmi yoki tub koʻpaytuvchilar yordamida topamiz: EKUB('+a+', '+b+') = <b>'+g+'</b>.')
+      : (a+' va '+b+' sonlarining EKUKini topamiz: EKUK = (a × b) ÷ EKUB = ('+a+' × '+b+') ÷ '+g+' = <b>'+l+'</b>.');
+    return { prompt: useGcd? ('EKUB('+a+', '+b+') ni toping.') : ('EKUK('+a+', '+b+') ni toping.'), svg:null, options:r.options, correctIndex:r.correctIndex, explanation:expl };
+  }
+
+  /* === 4. Sonni tub koʻpaytuvchilarga ajratish, boʻluvchilar soni va yigʻindisi === */
+  function primeFactorize(n){
+    var factors = {}, d=2;
+    while(d*d<=n){ while(n%d===0){ factors[d]=(factors[d]||0)+1; n=n/d; } d++; }
+    if(n>1) factors[n]=(factors[n]||0)+1;
+    return factors;
+  }
+  function genPrimeFactorization(level){
+    var n = rnd(24, 90+level*15);
+    var factors = primeFactorize(n);
+    var keys = Object.keys(factors).map(Number);
+    var type = pick(['count','sum']);
+    var numDivisors = keys.reduce(function(acc,p){ return acc*(factors[p]+1); }, 1);
+    var factorStr = keys.sort(function(x,y){return x-y;}).map(function(p){ return factors[p]>1 ? (p+'^'+factors[p]) : String(p); }).join(' × ');
+    if(type==='count'){
+      var r = makeNumericOptions(numDivisors, 3);
+      var expl = n+' = '+factorStr+'. Boʻluvchilar soni = '+keys.map(function(p){ return '('+factors[p]+'+1)'; }).join(' × ')+' = <b>'+numDivisors+'</b>.';
+      return { prompt: n+' sonining natural boʻluvchilari soni nechta?', svg:null, options:r.options, correctIndex:r.correctIndex, explanation:expl };
+    }
+    var sumDiv = keys.reduce(function(acc,p){
+      var s=0; for(var e=0;e<=factors[p];e++) s+=Math.pow(p,e);
+      return acc*s;
+    }, 1);
+    var r2 = makeNumericOptions(sumDiv, Math.max(6,Math.round(sumDiv*0.15)));
+    var expl2 = n+' = '+factorStr+'. Barcha natural boʻluvchilar yigʻindisi formulasi asosida: <b>'+sumDiv+'</b>.';
+    return { prompt: n+' sonining barcha natural boʻluvchilari yigʻindisini toping.', svg:null, options:r2.options, correctIndex:r2.correctIndex, explanation:expl2 };
+  }
+
+  /* === 5. Qoldiqli boʻlish va oxirgi raqam === */
+  function genRemainderLastDigit(level){
+    var type = pick(['remainder','lastdigit']);
+    if(type==='remainder'){
+      var divisor = rnd(4,9+level);
+      var quotient = rnd(5,20+level*3);
+      var remainder = rnd(1,divisor-1);
+      var n = divisor*quotient+remainder;
+      var r = makeNumericOptions(remainder, Math.max(3,divisor-1));
+      var expl = n+' ÷ '+divisor+' = '+quotient+' (qoldiq bilan), chunki '+divisor+' × '+quotient+' = '+(divisor*quotient)+'. Qoldiq = '+n+' − '+(divisor*quotient)+' = <b>'+remainder+'</b>.';
+      return { prompt: n+' sonini '+divisor+' ga boʻlganda qoldiq nechaga teng?', svg:null, options:r.options, correctIndex:r.correctIndex, explanation:expl };
+    }
+    var base = rnd(2,9);
+    var exp = rnd(11,40+level*10);
+    var seq = [], v=1;
+    for(var q=1;q<=12;q++){ v=(v*base)%10; seq.push(v); }
+    var per=4;
+    for(var p=1;p<=4;p++){
+      var ok=true;
+      for(var j=p;j<seq.length;j++){ if(seq[j]!==seq[j-p]){ ok=false; break; } }
+      if(ok){ per=p; break; }
+    }
+    var idxInCycle = ((exp-1) % per);
+    var lastDigit = seq[idxInCycle];
+    var r2 = makeNumericOptions(lastDigit, 4);
+    var expl2 = base+' ning darajalari oxirgi raqami davriy takrorlanadi (davr = '+per+'): '+seq.slice(0,per).join(', ')+', ... Demak '+base+'^'+exp+' ning oxirgi raqami = <b>'+lastDigit+'</b>.';
+    return { prompt: base+'^'+exp+' sonining oxirgi raqamini toping.', svg:null, options:r2.options, correctIndex:r2.correctIndex, explanation:expl2 };
+  }
+
+  /* === 8. Qisqa koʻpaytirish formulalari === */
+  function genShortMulFormula(level){
+    var a = rnd(3,9+level), b = rnd(1,8+level);
+    var type = pick(['sumSq','diffSq','diffSquares']);
+    if(type==='sumSq'){
+      var val = (a+b)*(a+b);
+      var r = makeNumericOptions(val, 10+level*5);
+      var expl = '(a+b)² = a² + 2ab + b²: ('+a+'+'+b+')² = '+(a*a)+' + '+(2*a*b)+' + '+(b*b)+' = <b>'+val+'</b>.';
+      return { prompt:'('+a+' + '+b+')² ni hisoblang.', svg:null, options:r.options, correctIndex:r.correctIndex, explanation:expl };
+    }
+    if(b>=a){ var t=a; a=b; b=t; if(a===b) a=a+1; }
+    if(type==='diffSq'){
+      var val2 = (a-b)*(a-b);
+      var r2 = makeNumericOptions(val2, 8+level*4);
+      var expl2 = '(a−b)² = a² − 2ab + b²: ('+a+'−'+b+')² = '+(a*a)+' − '+(2*a*b)+' + '+(b*b)+' = <b>'+val2+'</b>.';
+      return { prompt:'('+a+' − '+b+')² ni hisoblang.', svg:null, options:r2.options, correctIndex:r2.correctIndex, explanation:expl2 };
+    }
+    var val3 = a*a-b*b;
+    var r3 = makeNumericOptions(val3, 8+level*5);
+    var expl3 = 'a² − b² = (a−b)(a+b): '+a+'² − '+b+'² = ('+a+'−'+b+') × ('+a+'+'+b+') = '+(a-b)+' × '+(a+b)+' = <b>'+val3+'</b>.';
+    return { prompt: a+'² − '+b+'² ni hisoblang.', svg:null, options:r3.options, correctIndex:r3.correctIndex, explanation:expl3 };
+  }
+
+  /* === 9. Koʻphadlarni koʻpaytuvchilarga ajratish === */
+  function genFactorPoly(level){
+    var p = rnd(1,5+level), q = rnd(1,5+level);
+    var b = p+q, c = p*q;
+    var correctStr = '(x+'+p+')(x+'+q+')';
+    var distract = [];
+    var guard=0;
+    while(distract.length<3 && guard<40){
+      guard++;
+      var dp = Math.max(1,p+rnd(-2,2)), dq = Math.max(1,q+rnd(-2,2));
+      var s = '(x+'+dp+')(x+'+dq+')';
+      if(s!==correctStr && distract.indexOf(s)===-1) distract.push(s);
+    }
+    var opts = shuffle([correctStr].concat(distract));
+    var expl = 'x² + '+b+'x + '+c+' = (x+p)(x+q) koʻrinishida yozish uchun pq = '+c+' va p+q = '+b+' boʻladigan p, q larni topamiz: p = '+p+', q = '+q+'. Demak: <b>'+correctStr+'</b>.';
+    return { prompt:'x² + '+b+'x + '+c+' koʻphadini koʻpaytuvchilarga ajrating.', svg:null, options:opts, correctIndex:opts.indexOf(correctStr), explanation:expl };
+  }
+
+  /* === 10. Algebraik kasrlar === */
+  function genAlgebraicFraction(level){
+    var a = rnd(2,5+level);
+    var xVal = rnd(a+1, a+6+level);
+    var val = xVal+a;
+    var r = makeNumericOptions(val, 5+level*2);
+    var expl = '(x² − '+(a*a)+') ÷ (x − '+a+') ifodasini soddalashtiramiz: x² − '+(a*a)+' = (x−'+a+')(x+'+a+'), demak ifoda (x+'+a+') ga teng. x = '+xVal+' boʻlganda: <b>'+xVal+' + '+a+' = '+val+'</b>.';
+    return { prompt: 'x = '+xVal+' boʻlganda, (x² − '+(a*a)+') ÷ (x − '+a+') ifodaning qiymatini toping.', svg:null, options:r.options, correctIndex:r.correctIndex, explanation:expl };
+  }
+
+  /* === 11. Chiziqli tenglamalar va tenglamalar sistemasi === */
+  function genLinearEq(level){
+    var a = rnd(2, 2+level);
+    var x = rnd(2, 3+level);
+    var b = rnd(1, 5+level*2);
+    var c = a*x+b;
+    var r = makeNumericOptions(x, 3+level);
+    var expl = 'Avval ozod hadni tenglamaning narigi tomoniga oʻtkazamiz: <b>'+a+'x = '+c+' − '+b+' = '+(c-b)+'</b>. Keyin ikkala tomonni '+a+' ga boʻlamiz: <b>x = '+(c-b)+' ÷ '+a+' = '+x+'</b>.';
+    return { prompt: a+'<b>x</b> + '+b+' = '+c+' tenglamada <b>x</b> ning qiymatini toping.', svg:null, options:r.options, correctIndex:r.correctIndex, explanation:expl };
+  }
+  function genLinearSystem(level){
+    var x = rnd(1,6+level), y = rnd(1,6+level);
+    var a1=rnd(1,4), b1=rnd(1,4), a2=rnd(1,4), b2=rnd(1,4);
+    var guard=0;
+    while(a1*b2-a2*b1===0 && guard<20){ a2=rnd(1,4); b2=rnd(1,4); guard++; }
+    var c1 = a1*x+b1*y, c2 = a2*x+b2*y;
+    var askX = Math.random()<0.5;
+    var val = askX ? x : y;
+    var r = makeNumericOptions(val, 4+level);
+    var expl = 'Tenglamalar sistemasi: '+a1+'x + '+b1+'y = '+c1+' va '+a2+'x + '+b2+'y = '+c2+'. Oʻrniga qoʻyish yoki yoʻqotish usuli bilan yechsak: x = '+x+', y = '+y+'.';
+    return { prompt: a1+'x + '+b1+'y = '+c1+'<br>'+a2+'x + '+b2+'y = '+c2+'<br>Sistemani yechib, '+(askX?'<b>x</b>':'<b>y</b>')+' ni toping.', svg:null, options:r.options, correctIndex:r.correctIndex, explanation:expl };
+  }
+
+  /* === 12. Arifmetik kvadrat ildiz === */
+  function genSquareRoot(level){
+    var type = pick(['simplify','perfect']);
+    if(type==='perfect'){
+      var n = rnd(5,15+level*2);
+      var val = n*n;
+      var r = makeNumericOptions(n, 4+level);
+      var expl = '√'+val+' = '+n+', chunki '+n+'² = '+val+'.';
+      return { prompt:'√'+val+' ni hisoblang.', svg:null, options:r.options, correctIndex:r.correctIndex, explanation:expl };
+    }
+    var k = rnd(2,5+Math.floor(level/2));
+    var m = pick([2,3,5,6,7]);
+    var val2 = k*k*m;
+    var correctStr = k+'√'+m;
+    var distract=[];
+    var guard=0;
+    while(distract.length<3 && guard<30){
+      guard++;
+      var dk = Math.max(1,k+rnd(-2,2)), dm = pick([2,3,5,6,7,10]);
+      if(dk===k && dm===m) continue;
+      var s = dk+'√'+dm;
+      if(s!==correctStr && distract.indexOf(s)===-1) distract.push(s);
+    }
+    var opts = shuffle([correctStr].concat(distract));
+    var expl2 = '√'+val2+' = √('+(k*k)+' × '+m+') = √'+(k*k)+' × √'+m+' = <b>'+k+'√'+m+'</b>.';
+    return { prompt:'√'+val2+' ifodasini soddalashtiring.', svg:null, options:opts, correctIndex:opts.indexOf(correctStr), explanation:expl2 };
+  }
+
+  /* === 13. Tenglama tuzishga doir matnli masalalar === */
+  function genSpeedProblem(level){
+    var speed = rnd(40,70+level*5);
+    var time = rnd(2,5+level);
+    var dist = speed*time;
+    var askTime = Math.random()<0.5;
+    if(askTime){
+      var r = makeNumericOptions(time, 2);
+      var expl = 'Vaqt = Masofa ÷ Tezlik = '+dist+' ÷ '+speed+' = <b>'+time+'</b> soat.';
+      return { prompt:'Mashina '+speed+' km/soat tezlik bilan yurib, '+dist+' km masofani necha soatda bosib oʻtadi?', svg:null, options:r.options, correctIndex:r.correctIndex, explanation:expl };
+    }
+    var r2 = makeNumericOptions(dist, 20+level*10);
+    var expl2 = 'Masofa = Tezlik × Vaqt = '+speed+' × '+time+' = <b>'+dist+'</b> km.';
+    return { prompt:'Mashina '+speed+' km/soat tezlik bilan '+time+' soat yursa, qancha masofa bosib oʻtadi?', svg:null, options:r2.options, correctIndex:r2.correctIndex, explanation:expl2 };
+  }
+  var WORK_TRIPLES = [[4,4,2],[6,3,2],[6,6,3],[8,8,4],[12,6,4],[10,15,6],[9,18,6],[8,24,6],[12,4,3],[15,10,6],[20,5,4],[6,12,4],[16,16,8],[10,10,5],[14,14,7]];
+  function genWorkProblem(level){
+    var triple = pick(WORK_TRIPLES);
+    var daysA = triple[0], daysB = triple[1], combined = triple[2];
+    var r = makeNumericOptions(combined, Math.max(2, Math.round(combined*0.4)+1));
+    var expl = 'Birinchisi 1 kunda ishning 1/'+daysA+' qismini, ikkinchisi 1/'+daysB+' qismini bajaradi. Birgalikda: 1/'+daysA+' + 1/'+daysB+'. Butun ishni bajarish uchun kerakli kunlar: <b>'+combined+'</b> kun.';
+    return { prompt:'Birinchi ishchi bir ishni '+daysA+' kunda, ikkinchi ishchi esa '+daysB+' kunda bajaradi. Ular birgalikda ishlasa, ish necha kunda bajariladi?', svg:null, options:r.options, correctIndex:r.correctIndex, explanation:expl };
+  }
+
+  /* === 14. Chiziqli tengsizliklar va tengsizliklar sistemasi === */
+  function genLinearInequality(level){
+    var a = rnd(2,5+Math.floor(level/2));
+    var x0 = rnd(2,8+level);
+    var b = rnd(1,10+level*2);
+    var c = a*x0+b;
+    var dir = pick(['>','<','>=','<=']);
+    var answer, desc;
+    if(dir==='>'){ answer = x0+1; desc='eng kichik butun yechim'; }
+    else if(dir==='<'){ answer = x0-1; desc='eng katta butun yechim'; }
+    else if(dir==='>='){ answer = x0; desc='eng kichik butun yechim'; }
+    else { answer = x0; desc='eng katta butun yechim'; }
+    var r = makeNumericOptions(answer, 3+level);
+    var expl = a+'x + '+b+' '+dir+' '+c+' tengsizlikdan: '+a+'x '+dir+' '+(c-b)+', keyin x '+dir+' '+x0+'. Demak '+desc+' — <b>'+answer+'</b>.';
+    return { prompt: a+'x + '+b+' '+dir+' '+c+' tengsizlikni qanoatlantiruvchi '+desc+'ni toping.', svg:null, options:r.options, correctIndex:r.correctIndex, explanation:expl };
+  }
+
+  /* === 15. Kvadrat tenglamalar va Viyet teoremasi === */
+  function genQuadraticVieta(level){
+    var r1 = rnd(1,6+level), r2v = rnd(1,6+level);
+    var sum = r1+r2v, prod = r1*r2v;
+    var askType = pick(['sum','product','root']);
+    if(askType==='sum'){
+      var ro = makeNumericOptions(sum, 3+level);
+      var expl = 'Viyet teoremasiga koʻra, x² − '+sum+'x + '+prod+' = 0 tenglamada ildizlar yigʻindisi x1+x2 = <b>'+sum+'</b>.';
+      return { prompt:'x² − '+sum+'x + '+prod+' = 0 tenglamaning ildizlari yigʻindisini toping.', svg:null, options:ro.options, correctIndex:ro.correctIndex, explanation:expl };
+    }
+    if(askType==='product'){
+      var ro2 = makeNumericOptions(prod, Math.max(4,Math.round(prod*0.3)+2));
+      var expl2 = 'Viyet teoremasiga koʻra, x² − '+sum+'x + '+prod+' = 0 tenglamada ildizlar koʻpaytmasi x1·x2 = <b>'+prod+'</b> (ozod had).';
+      return { prompt:'x² − '+sum+'x + '+prod+' = 0 tenglamaning ildizlari koʻpaytmasini toping.', svg:null, options:ro2.options, correctIndex:ro2.correctIndex, explanation:expl2 };
+    }
+    var askBigger = Math.random()<0.5;
+    var val = askBigger ? Math.max(r1,r2v) : Math.min(r1,r2v);
+    var ro3 = makeNumericOptions(val, 3+level);
+    var expl3 = 'x² − '+sum+'x + '+prod+' = 0 tenglamani tahlil qilsak, ildizlar '+r1+' va '+r2v+' ekanini aniqlaymiz (yigʻindisi '+sum+', koʻpaytmasi '+prod+'). Demak '+(askBigger?'katta':'kichik')+' ildiz: <b>'+val+'</b>.';
+    return { prompt:'x² − '+sum+'x + '+prod+' = 0 tenglamaning '+(askBigger?'katta':'kichik')+' ildizini toping.', svg:null, options:ro3.options, correctIndex:ro3.correctIndex, explanation:expl3 };
+  }
+
+  var ALG_EASY_GENS = [genNaturalConvenient, genDivisibility, genFractions, genRatioPercent];
+  var ALG_MEDIUM_GENS = [genGcdLcm, genPrimeFactorization, genRemainderLastDigit, genShortMulFormula];
+  var ALG_HARD_GENS = [genFactorPoly, genAlgebraicFraction, genLinearEq, genLinearSystem, genSquareRoot];
+  var ALG_IMPOSSIBLE_GENS = [genSpeedProblem, genWorkProblem, genLinearInequality, genQuadraticVieta];
+  var ALG_BUCKETS = { oson:ALG_EASY_GENS, orta:ALG_MEDIUM_GENS, qiyin:ALG_HARD_GENS, imkonsiz:ALG_IMPOSSIBLE_GENS };
+
+  /* ---------- Geometry generators ---------- */
+  function genRectArea(level){
+    var w=rnd(3,6+level), h=rnd(3,6+level);
+    var area = w*h;
+    var r = makeNumericOptions(area, 5+level*2, 'sm²');
+    var expl = 'Toʻgʻri toʻrtburchak yuzi: <b>S = en × boʻyi = '+w+' × '+h+' = '+area+' sm²</b>.';
+    return { prompt:'Rasmdagi toʻgʻri toʻrtburchakning yuzini toping.', svg:svgRect(w,h), options:r.options, correctIndex:r.correctIndex, explanation:expl };
+  }
+  function genTriArea(level){
+    var base=rnd(4,8+level), height=rnd(3,7+level);
+    if((base*height)%2!==0) height+=1;
+    var area=(base*height)/2;
+    var expl = 'Uchburchak yuzi: <b>S = (asos × balandlik) ÷ 2 = ('+base+' × '+height+') ÷ 2 = '+area+' sm²</b>.';
+    var r = makeNumericOptions(area, 4+level*2, 'sm²');
+    return { prompt:'Rasmdagi uchburchakning yuzini toping.', svg:svgTriangle(base,height), options:r.options, correctIndex:r.correctIndex, explanation:expl };
+  }
+  function genCircle(level){
+    var r0=rnd(2,5+level);
+    var useCirc = Math.random()<0.5;
+    var val, prompt, unit, expl;
+    if(useCirc){
+      val=Math.round(2*3.14*r0); unit='sm';
+      prompt='Radiusi '+r0+' sm boʻlgan aylananing uzunligini toping (π ≈ 3.14).';
+      expl = 'Aylana uzunligi: <b>L = 2 × π × r = 2 × 3.14 × '+r0+' ≈ '+val+' sm</b>.';
+    } else {
+      val=Math.round(3.14*r0*r0); unit='sm²';
+      prompt='Radiusi '+r0+' sm boʻlgan doiraning yuzini toping (π ≈ 3.14).';
+      expl = 'Doira yuzi: <b>S = π × r² = 3.14 × '+r0+'² ≈ '+val+' sm²</b>.';
+    }
+    var r = makeNumericOptions(val, 5+level*3, unit);
+    return { prompt: prompt, svg: svgCircle(r0), options:r.options, correctIndex:r.correctIndex, explanation:expl };
+  }
+  function genAngle(level){
+    var a1=rnd(30,75), a2=rnd(30,75);
+    var a3 = 180-a1-a2;
+    var guard=0;
+    while(a3<10 && guard<10){ a2 = Math.max(20, a2-10); a3 = 180-a1-a2; guard++; }
+    var r = makeNumericOptions(a3, 10, '°');
+    var expl = 'Uchburchak burchaklari yigʻindisi doim <b>180°</b>. Demak: <b>180° − '+a1+'° − '+a2+'° = '+a3+'°</b>.';
+    return { prompt:'Uchburchakning ikki burchagi '+a1+'° va '+a2+'°. Uchinchi burchak necha gradus?', svg:svgAngleTriangle(a1,a2), options:r.options, correctIndex:r.correctIndex, explanation:expl };
+  }
+  var RIDDLES = [
+    { q:'Mening toʻrtta teng tomonim va toʻrtta toʻgʻri burchagim bor. Men kimman?', correct:'Kvadrat', opts:['Kvadrat','Romb','Trapetsiya','Toʻrtburchak'], why:'Kvadratning barcha tomonlari teng <b>va</b> barcha burchaklari 90° — bu uni romb va toʻrtburchakdan ajratib turadi.' },
+    { q:'Tomonlarim teng, lekin burchaklarim toʻgʻri boʻlishi shart emas. Men kimman?', correct:'Romb', opts:['Romb','Kvadrat','Doira','Uchburchak'], why:'Rombda toʻrtta tomon teng, ammo burchaklar 90° boʻlmasligi mumkin — aks holda u kvadrat boʻlar edi.' },
+    { q:'Mening markazim bor, lekin bironta ham burchagim yoʻq. Men kimman?', correct:'Doira', opts:['Doira','Uchburchak','Kvadrat','Olti burchak'], why:'Doira — markazdan bir xil masofadagi nuqtalar toʻplami, uning burchaklari yoʻq, chunki tomonlari yoʻq.' },
+    { q:'Mening ikkita tomonim parallel, qolgan ikkitasi emas. Men kimman?', correct:'Trapetsiya', opts:['Trapetsiya','Parallelogramm','Romb','Kvadrat'], why:'Trapetsiyada faqat bir juft tomon (asoslar) parallel boʻladi, parallelogrammda esa ikkala juft ham parallel.' },
+    { q:'Mening uchta tomonim va uchta burchagim bor. Men kimman?', correct:'Uchburchak', opts:['Uchburchak','Toʻrtburchak','Beshburchak','Doira'], why:'Nomidan koʻrinib turibdiki, "uch" + "burchak" = uchta tomon va uchta burchakka ega shakl.' },
+    { q:'Mening oltita teng tomonim bor. Men kimman?', correct:'Olti burchak', opts:['Olti burchak','Beshburchak','Kvadrat','Trapetsiya'], why:'Toʻgʻri olti burchakning barcha 6 tomoni va burchagi teng boʻladi.' },
+    { q:'Qarama-qarshi tomonlarim juft-juft parallel va teng, lekin burchaklarim toʻgʻri boʻlmasligi mumkin. Men kimman?', correct:'Parallelogramm', opts:['Parallelogramm','Kvadrat','Doira','Beshburchak'], why:'Parallelogrammda qarama-qarshi tomonlar parallel va teng, ammo burchaklar 90° boʻlishi shart emas.' }
+  ];
+  function genShapeRiddle(){
+    var riddle = pick(RIDDLES);
+    var opts = shuffle(riddle.opts.slice());
+    return { prompt: riddle.q, svg:null, options:opts, correctIndex: opts.indexOf(riddle.correct), explanation: riddle.why };
+  }
+  var GEOMETRY_GENS = [genRectArea, genTriArea, genCircle, genAngle, genShapeRiddle, genShapeRiddle];
+
+  /* ---------- Mascot "Sonchik" ---------- */
+  function sparkle(cx,cy,r,color){
+    return '<path d="M'+cx+' '+(cy-r)+' L'+(cx+r*0.3)+' '+(cy-r*0.3)+' L'+(cx+r)+' '+cy+' L'+(cx+r*0.3)+' '+(cy+r*0.3)+' L'+cx+' '+(cy+r)+' L'+(cx-r*0.3)+' '+(cy+r*0.3)+' L'+(cx-r)+' '+cy+' L'+(cx-r*0.3)+' '+(cy-r*0.3)+' Z" fill="'+color+'"/>';
+  }
+  function heartShape(cx,cy,r,color){
+    return '<circle cx="'+(cx-r*0.5)+'" cy="'+(cy-r*0.2)+'" r="'+(r*0.55)+'" fill="'+color+'"/>'+
+           '<circle cx="'+(cx+r*0.5)+'" cy="'+(cy-r*0.2)+'" r="'+(r*0.55)+'" fill="'+color+'"/>'+
+           '<path d="M'+(cx-r)+' '+(cy-r*0.1)+' Q'+cx+' '+(cy+r*1.1)+' '+(cx+r)+' '+(cy-r*0.1)+' Z" fill="'+color+'"/>';
+  }
+
+  var EMOTIONS = {
+    wave:       { eyes:'<circle cx="50" cy="62" r="6" fill="var(--text)"/><circle cx="70" cy="62" r="6" fill="var(--text)"/>',
+                  mouth:'<path d="M48 76 Q60 84 72 76" stroke="var(--text)" stroke-width="3" fill="none" stroke-linecap="round"/>', extra:'' },
+    thinking:   { eyes:'<circle cx="50" cy="60" r="6" fill="var(--text)"/><circle cx="71" cy="58" r="6" fill="var(--text)"/>',
+                  mouth:'<path d="M50 78 Q60 74 70 78" stroke="var(--text)" stroke-width="3" fill="none" stroke-linecap="round"/>',
+                  extra:'<circle cx="92" cy="36" r="3" fill="var(--muted)"/><circle cx="99" cy="28" r="2" fill="var(--muted)"/>' },
+    happy:      { eyes:'<path d="M44 60 Q50 54 56 60" stroke="var(--text)" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M64 60 Q70 54 76 60" stroke="var(--text)" stroke-width="3" fill="none" stroke-linecap="round"/>',
+                  mouth:'<path d="M46 74 Q60 85 74 74" stroke="var(--text)" stroke-width="3.5" fill="none" stroke-linecap="round"/>',
+                  extra:'<circle cx="40" cy="74" r="4" fill="var(--danger)" opacity=".35"/><circle cx="80" cy="74" r="4" fill="var(--danger)" opacity=".35"/>' },
+    excited:    { eyes:'', mouth:'<path d="M44 74 Q60 90 76 74 Q60 81 44 74 Z" fill="var(--text)"/>', extra:'' },
+    celebrating:{ eyes:'', mouth:'<path d="M44 74 Q60 90 76 74 Q60 81 44 74 Z" fill="var(--text)"/>',
+                  extra:'<circle cx="18" cy="30" r="3" fill="var(--algebra)"/><circle cx="104" cy="32" r="3" fill="var(--geometry)"/><circle cx="14" cy="60" r="2.5" fill="var(--success)"/><circle cx="108" cy="64" r="2.5" fill="var(--danger)"/>' },
+    sad:        { eyes:'<circle cx="50" cy="63" r="5" fill="var(--text)"/><circle cx="70" cy="63" r="5" fill="var(--text)"/>',
+                  mouth:'<path d="M48 82 Q60 72 72 82" stroke="var(--text)" stroke-width="3" fill="none" stroke-linecap="round"/>',
+                  extra:'<path d="M44 66 q-3 6 0 10 q3-4 0-10z" fill="var(--geometry)"/>' },
+    shocked:    { eyes:'<circle cx="50" cy="61" r="8" fill="var(--text)"/><circle cx="70" cy="61" r="8" fill="var(--text)"/>',
+                  mouth:'<circle cx="60" cy="80" r="6" fill="var(--text)"/>', extra:'' },
+    worried:    { eyebrows:'<line x1="44" y1="50" x2="54" y2="54" stroke="var(--text)" stroke-width="3" stroke-linecap="round"/><line x1="76" y1="50" x2="66" y2="54" stroke="var(--text)" stroke-width="3" stroke-linecap="round"/>',
+                  eyes:'<circle cx="50" cy="62" r="5" fill="var(--text)"/><circle cx="70" cy="62" r="5" fill="var(--text)"/>',
+                  mouth:'<path d="M48 80 Q54 76 60 80 Q66 84 72 80" stroke="var(--text)" stroke-width="3" fill="none" stroke-linecap="round"/>',
+                  extra:'<path d="M80 46 q4 6 0 11 q-4-5 0-11z" fill="var(--geometry)"/>' },
+    proud:      { eyes:'<path d="M44 62 Q50 57 56 62" stroke="var(--text)" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M64 62 Q70 57 76 62" stroke="var(--text)" stroke-width="3" fill="none" stroke-linecap="round"/>',
+                  mouth:'<path d="M46 76 Q60 88 74 76" stroke="var(--text)" stroke-width="3.5" fill="none" stroke-linecap="round"/>',
+                  extra:'<path d="M92 36l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z" fill="var(--algebra)"/>' },
+    sleepy:     { eyes:'<path d="M44 62 Q50 66 56 62" stroke="var(--text)" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M64 62 Q70 66 76 62" stroke="var(--text)" stroke-width="3" fill="none" stroke-linecap="round"/>',
+                  mouth:'<ellipse cx="60" cy="78" rx="4" ry="3" fill="var(--text)"/>',
+                  extra:'<text x="86" y="34" fill="var(--muted)" font-size="13" font-weight="700" font-family="var(--font-body)">z</text><text x="95" y="24" fill="var(--muted)" font-size="9" font-weight="700" font-family="var(--font-body)">z</text>' },
+    determined: { eyebrows:'<line x1="44" y1="52" x2="56" y2="58" stroke="var(--text)" stroke-width="3.5" stroke-linecap="round"/><line x1="76" y1="52" x2="64" y2="58" stroke="var(--text)" stroke-width="3.5" stroke-linecap="round"/>',
+                  eyes:'<rect x="45" y="60" width="12" height="4" rx="2" fill="var(--text)"/><rect x="63" y="60" width="12" height="4" rx="2" fill="var(--text)"/>',
+                  mouth:'<line x1="48" y1="78" x2="72" y2="78" stroke="var(--text)" stroke-width="3.5" stroke-linecap="round"/>', extra:'' }
+  };
+
+  function mascotSVG(emotion){
+    var e = EMOTIONS[emotion] || EMOTIONS.wave;
+    var eyesHtml = e.eyes;
+    if(emotion==='excited') eyesHtml = sparkle(50,60,7,'var(--algebra)') + sparkle(70,60,7,'var(--geometry)');
+    if(emotion==='celebrating') eyesHtml = heartShape(50,60,6,'var(--danger)') + heartShape(70,60,6,'var(--danger)');
+    return '<svg viewBox="0 0 120 120" class="mascot-svg">'+
+      '<defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="var(--geometry)"/><stop offset="100%" stop-color="var(--algebra)"/></linearGradient></defs>'+
+      '<circle cx="24" cy="54" r="7" fill="url(#mg)"/><circle cx="96" cy="54" r="7" fill="url(#mg)"/>'+
+      '<line x1="60" y1="16" x2="60" y2="28" stroke="var(--muted)" stroke-width="3"/><circle cx="60" cy="13" r="5" fill="var(--algebra)"/>'+
+      '<rect x="22" y="26" width="76" height="76" rx="26" fill="url(#mg)"/>'+
+      '<rect x="34" y="40" width="52" height="48" rx="16" fill="var(--bg-deep)"/>'+
+      (e.eyebrows||'') + eyesHtml + e.mouth + (e.extra||'') +
+    '</svg>';
+  }
+
+  function setMascot(which, emotion, speech){
+    var svgTarget = document.getElementById('mascot-'+which);
+    if(svgTarget) svgTarget.innerHTML = mascotSVG(emotion);
+    var speechTarget = document.getElementById('mascot-'+which+'-speech');
+    if(speechTarget) speechTarget.textContent = speech||'';
+  }
+
+  /* ---------- Difficulty screen ---------- */
+  function buildDifficultyGrid(){
+    els.diffGrid.innerHTML = '';
+    DIFF_ORDER.forEach(function(key, idx){
+      var d = DIFFICULTIES[key];
+      var card = document.createElement('button');
+      card.className = 'diff-card';
+      card.type = 'button';
+      card.style.setProperty('--accent', idx===0?'var(--success)':idx===1?'var(--geometry)':idx===2?'var(--algebra)':'var(--danger)');
+      var pips = '';
+      for(var p=0;p<4;p++){ pips += '<span class="diff-pip'+(p<=idx?' filled':'')+'"></span>'; }
+      card.innerHTML = '<div class="diff-pips">'+pips+'</div><h3>'+d.label+'</h3><p>'+d.desc+'</p>';
+      card.addEventListener('mouseenter', function(){ sfx('hover'); setMascot('diff', d.hoverEmotion, d.hoverSpeech); });
+      card.addEventListener('click', function(){ sfx('click'); startRound(state.pendingMode, d.key); });
+      els.diffGrid.appendChild(card);
+    });
+  }
+  function showDifficultyScreen(mode){
+    state.pendingMode = mode;
+    els.diffModeLabel.textContent = mode==='algebra' ? 'Algebra olami' : 'Geometriya olami';
+    showScreen('difficulty');
+    setMascot('diff', 'excited', mode==='algebra' ? 'Algebra jangiga tayyormisiz?' : 'Geometriya sayohatiga tayyormisiz?');
+  }
+
+  /* ---------- Game flow ---------- */
+  function updateHearts(){
+    var html='';
+    for(var i=0;i<state.diff.lives;i++){
+      html += '<svg class="heart '+(i<state.lives?'full':'empty')+'" viewBox="0 0 24 24"><path d="M12 21s-6.7-4.4-9.5-8.4C.6 9.3 2 5.3 5.6 5.1c2-.1 3.5 1.1 4.5 2.6.9-1.5 2.5-2.7 4.5-2.6 3.6.2 5 4.2 3.1 7.5C18.7 16.6 12 21 12 21z"/></svg>';
+    }
+    els.hearts.innerHTML = html;
+  }
+  function updateScoreUI(){ els.scoreVal.textContent = state.score; }
+  function updateStreakUI(){
+    if(state.streak>=2){ els.streakWrap.hidden=false; els.streakVal.textContent='Seriya ×'+state.streak; }
+    else{ els.streakWrap.hidden=true; }
+  }
+
+  function startRound(mode, diffKey){
+    state.mode = mode;
+    state.diffKey = diffKey;
+    state.diff = DIFFICULTIES[diffKey];
+    state.idx = 0; state.score = 0; state.streak = 0; state.lives = state.diff.lives;
+    showScreen('game');
+    updateStudentTag();
+    nextQuestion();
+  }
+
+  function nextQuestion(){
+    clearTimeout(state.timerTimeout);
+    clearTimeout(state.mascotTimeout);
+    clearInterval(state.countdownInterval);
+    if(state.lives<=0 || state.idx>=TOTAL_Q){ return endRound(); }
+    state.idx++;
+    var level = Math.min(6, state.diff.levelStart + Math.floor((state.idx-1)/3));
+    var gens = state.mode==='algebra' ? (ALG_BUCKETS[state.diffKey] || ALG_EASY_GENS) : GEOMETRY_GENS;
+    state.current = pick(gens)(level);
+    renderQuestion();
+    startTimer();
+  }
+
+  function renderQuestion(){
+    els.progressVal.textContent = state.idx;
+    els.questionText.innerHTML = state.current.prompt;
+    if(state.current.svg){ els.shapeWrap.innerHTML = state.current.svg; els.shapeWrap.hidden=false; }
+    else{ els.shapeWrap.innerHTML=''; els.shapeWrap.hidden=true; }
+    els.feedback.className='feedback-banner';
+    els.feedback.textContent='';
+    els.explanationPanel.hidden = true;
+    els.explanationPanel.classList.remove('show');
+    els.btnNextQuestion.hidden = true;
+    els.optionsGrid.innerHTML='';
+    state.current.options.forEach(function(opt, i){
+      var btn = document.createElement('button');
+      btn.className='option-btn';
+      btn.type='button';
+      btn.textContent=opt;
+      btn.dataset.i=i;
+      btn.addEventListener('click', onAnswer);
+      els.optionsGrid.appendChild(btn);
+    });
+    updateHearts(); updateScoreUI(); updateStreakUI();
+    setMascot('game', 'thinking', 'Oʻylab koʻr...');
+  }
+
+  function startTimer(){
+    var limit = state.diff.time;
+    els.timerBar.style.transition='none';
+    els.timerBar.style.width='100%';
+    void els.timerBar.offsetWidth;
+    requestAnimationFrame(function(){
+      els.timerBar.style.transition='width '+(limit/1000)+'s linear';
+      els.timerBar.style.width='0%';
+    });
+    state.timerTimeout = setTimeout(function(){ onAnswer({ currentTarget:{ dataset:{ i:'-1' } } }); }, limit);
+    clearInterval(state.countdownInterval);
+    if(limit>4000){
+      state.mascotTimeout = setTimeout(function(){
+        setMascot('game','shocked','Vaqt tugayapti!');
+        var beats = 3;
+        sfx('countdown'); vibrate(10);
+        state.countdownInterval = setInterval(function(){
+          beats--;
+          if(beats<=0){ clearInterval(state.countdownInterval); return; }
+          sfx('countdown'); vibrate(10);
+        }, 1000);
+      }, limit-3000);
+    }
+  }
+
+  function onAnswer(e){
+    clearTimeout(state.timerTimeout);
+    clearTimeout(state.mascotTimeout);
+    clearInterval(state.countdownInterval);
+    els.timerBar.style.transition='none';
+    var i = parseInt(e.currentTarget.dataset.i, 10);
+    var correct = (i === state.current.correctIndex);
+    var buttons = Array.prototype.slice.call(els.optionsGrid.children);
+    buttons.forEach(function(b, bi){
+      b.disabled = true;
+      if(bi===state.current.correctIndex) b.classList.add('correct');
+      else if(bi===i) b.classList.add('wrong');
+    });
+    if(correct){
+      state.streak++;
+      state.score += Math.round((10 + state.streak*2) * state.diff.scoreMult);
+      els.feedback.textContent = 'Toʻgʻri javob! Davom eting.';
+      els.feedback.className = 'feedback-banner good show';
+      launchConfetti();
+      vibrate(15);
+      sfx('correct');
+      if(state.streak===3 || (state.streak>0 && state.streak%5===0)){
+        triggerStreakCelebration(state.streak);
+      }
+      if(state.streak>=4) setMascot('game','celebrating','Zoʻr ketyapsan!');
+      else if(state.streak>=2) setMascot('game','excited','Ajoyib!');
+      else setMascot('game','happy','Toʻgʻri!');
+    } else {
+      state.streak = 0;
+      state.lives--;
+      els.feedback.textContent = i===-1 ? 'Vaqt tugadi. Keyingisiga oʻtamiz.' : 'Notoʻgʻri. Toʻgʻri javob belgilandi.';
+      els.feedback.className = 'feedback-banner bad show';
+      vibrate([10,30,10]);
+      sfx(i===-1 ? 'timeout' : 'wrong');
+      if(state.lives<=0) setMascot('game','sad','Hechqisi yoʻq, yana urinib koʻr!');
+      else if(state.lives===1) setMascot('game','worried','Ehtiyot boʻling, bitta joningiz qoldi!');
+      else setMascot('game','sad','Hechqisi yoʻq, davom eting!');
+    }
+    updateHearts(); updateScoreUI(); updateStreakUI();
+
+    if(state.current.explanation){
+      els.explanationText.innerHTML = state.current.explanation;
+      els.explanationPanel.hidden = false;
+      requestAnimationFrame(function(){ els.explanationPanel.classList.add('show'); });
+    }
+    var isLast = (state.lives<=0 || state.idx>=TOTAL_Q);
+    els.btnNextQuestion.textContent = isLast ? 'Yakunlash →' : 'Keyingi savol →';
+    els.btnNextQuestion.hidden = false;
+  }
+
+  function endRound(){
+    showScreen('end');
+    var won = state.lives>0;
+    els.endTitle.textContent = won ? 'Bosqich yakunlandi!' : 'Jonlar tugadi!';
+    els.endScoreVal.textContent = state.score;
+    els.endDiffVal.textContent = state.diff.label;
+    if(state.score > best[state.mode]){ best[state.mode] = state.score; saveBest(); }
+    els.endBestVal.textContent = best[state.mode];
+    els.bestAlgebra.textContent = best.algebra;
+    els.bestGeometry.textContent = best.geometry;
+
+    var starCount = state.score>=170 ? 3 : state.score>=100 ? 2 : state.score>=40 ? 1 : 0;
+    var starsHtml='';
+    for(var s=0;s<3;s++){
+      starsHtml += '<svg class="dim" viewBox="0 0 24 24"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.7 7-6.3-3.9-6.3 3.9 1.7-7L2 9.2l7.1-.6z"/></svg>';
+    }
+    els.endStars.innerHTML = starsHtml;
+    var starEls = Array.prototype.slice.call(els.endStars.children);
+    starEls.forEach(function(el, i){
+      if(i>=starCount) return;
+      setTimeout(function(){
+        el.classList.remove('dim'); el.classList.add('lit','pop');
+        sfxStar(i); vibrate(14);
+      }, 450 + i*320);
+    });
+
+    if(!won) setMascot('end','sad','Hechqisi yoʻq, yana urinib koʻring!');
+    else if(starCount>=3) setMascot('end','celebrating','Siz chinakam chempionsiz!');
+    else if(starCount===2) setMascot('end','proud','Ajoyib natija!');
+    else setMascot('end','happy','Yaxshi harakat!');
+  }
+
+  function vibrate(pattern){ try{ if(navigator.vibrate) navigator.vibrate(pattern); }catch(e){} }
+
+  /* ---------- Sound effects (synthesized, no external audio files) ---------- */
+  var AudioCtor = window.AudioContext || window.webkitAudioContext;
+  var actx = null;
+  function getActx(){
+    if(!AudioCtor) return null;
+    if(!actx){ try{ actx = new AudioCtor(); }catch(e){ return null; } }
+    if(actx.state==='suspended'){ actx.resume().catch(function(){}); }
+    return actx;
+  }
+  function beep(freq, startOffset, dur, type, vol){
+    var ctx = getActx();
+    if(!ctx) return;
+    try{
+      var t0 = ctx.currentTime + startOffset;
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.setValueAtTime(freq, t0);
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.linearRampToValueAtTime(vol||0.18, t0+0.018);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(t0); osc.stop(t0+dur+0.03);
+    }catch(e){}
+  }
+  function sfx(name){
+    switch(name){
+      case 'correct': beep(523.25,0,.14,'sine',.2); beep(783.99,.09,.2,'sine',.18); break;
+      case 'wrong': beep(180,0,.28,'sawtooth',.15); beep(120,.1,.3,'sawtooth',.1); break;
+      case 'tick': beep(950,0,.04,'square',.045); break;
+      case 'click': beep(700,0,.06,'triangle',.08); break;
+      case 'streak3': beep(523,0,.11,'sine',.2); beep(659,.1,.11,'sine',.2); beep(784,.2,.22,'sine',.22); break;
+      case 'streak5': beep(523,0,.1,'sine',.2); beep(659,.09,.1,'sine',.2); beep(784,.18,.1,'sine',.22); beep(1046,.27,.3,'sine',.24); break;
+      case 'reveal': beep(392,0,.14,'sine',.2); beep(523,.12,.14,'sine',.2); beep(659,.24,.28,'sine',.24); break;
+      case 'drop': beep(150,0,.2,'sawtooth',.16); break;
+      case 'catch': beep(880,0,.12,'square',.14); beep(1174,.07,.12,'square',.1); break;
+      case 'whoosh': beep(260,0,.4,'sine',.07); beep(200,.15,.35,'sine',.06); break;
+      case 'timeout': beep(220,0,.3,'triangle',.14); break;
+      case 'hover': beep(1046,0,.035,'sine',.035); break;
+      case 'select': beep(880,0,.07,'triangle',.1); beep(1046,.05,.07,'triangle',.08); break;
+      case 'countdown': beep(1200,0,.08,'square',.08); break;
+      case 'menu-open': beep(440,0,.1,'sine',.1); beep(660,.07,.14,'sine',.1); break;
+    }
+  }
+  function sfxStar(i){ beep(659+i*131,0,.16,'sine',.2); }
+
+  function showComboBanner(text, variant, emotion){
+    var layer = document.getElementById('combo-layer');
+    var el = document.createElement('div');
+    el.className = 'combo-banner '+variant;
+    var mascotWrap = document.createElement('div');
+    mascotWrap.className = 'combo-mascot';
+    mascotWrap.innerHTML = mascotSVG(emotion || 'celebrating');
+    var label = document.createElement('span');
+    label.textContent = text;
+    el.appendChild(mascotWrap);
+    el.appendChild(label);
+    layer.appendChild(el);
+    requestAnimationFrame(function(){ el.classList.add('show'); });
+    setTimeout(function(){ el.remove(); }, 2100);
+  }
+  function pulseScreen(colorRgba){
+    var el = document.createElement('div');
+    el.className = 'screen-pulse';
+    el.style.background = 'radial-gradient(circle at 50% 30%, '+colorRgba+', transparent 70%)';
+    document.body.appendChild(el);
+    requestAnimationFrame(function(){ el.classList.add('show'); });
+    setTimeout(function(){ el.remove(); }, 1600);
+  }
+  function flashSweep(){
+    var el = document.createElement('div');
+    el.className = 'flash-sweep';
+    document.body.appendChild(el);
+    requestAnimationFrame(function(){ el.classList.add('show'); });
+    setTimeout(function(){ el.remove(); }, 1700);
+  }
+  function triggerStreakCelebration(streak){
+    if(streak===3){
+      showComboBanner(streak+' ta ketma-ket! Zoʻrsan!', 'combo-3', 'excited');
+      pulseScreen('rgba(255,182,72,0.45)');
+      vibrate([25,40,25,40,70]);
+      sfx('streak3');
+      launchConfetti(32);
+    } else if(streak>0 && streak%5===0){
+      showComboBanner(streak+' ta ketma-ket! Ajoyib seriya!', 'combo-5', 'celebrating');
+      pulseScreen('rgba(73,217,196,0.45)');
+      flashSweep();
+      vibrate([40,50,40,50,40,50,110]);
+      sfx('streak5');
+      launchConfetti(60);
+    }
+  }
+
+  function launchConfetti(count){
+    count = count || 22;
+    var colors = ['#ffb648','#49d9c4','#6be3a6','#ff6b7a','#f3f2fb'];
+    for(var i=0;i<count;i++){
+      var piece = document.createElement('div');
+      piece.className='confetti-piece';
+      piece.style.left = (Math.random()*100)+'vw';
+      piece.style.background = colors[i % colors.length];
+      piece.style.animationDuration = (1.3+Math.random()*1.0)+'s';
+      piece.style.opacity = String(0.7+Math.random()*0.3);
+      els.confetti.appendChild(piece);
+      (function(p){ setTimeout(function(){ p.remove(); }, 2700); })(piece);
+    }
+  }
+
+  /* ---------- Random student picker ---------- */
+  function loadStudents(){
+    try{
+      var raw = localStorage.getItem('sonvashakl-students');
+      if(raw){ var parsed = JSON.parse(raw); if(Array.isArray(parsed)) state.students = parsed; }
+    }catch(e){}
+  }
+  function saveStudents(){ try{ localStorage.setItem('sonvashakl-students', JSON.stringify(state.students)); }catch(e){} }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+
+  function renderStudentChips(){
+    var wrap = document.getElementById('student-chips');
+    wrap.innerHTML = state.students.map(function(name, i){
+      return '<span class="chip">'+escapeHtml(name)+'<button type="button" data-i="'+i+'" aria-label="Oʻchirish">×</button></span>';
+    }).join('');
+    Array.prototype.forEach.call(wrap.querySelectorAll('button'), function(btn){
+      btn.addEventListener('click', function(){
+        state.students.splice(parseInt(btn.dataset.i,10),1);
+        saveStudents(); renderStudentChips();
+      });
+    });
+    var label = document.getElementById('student-count-label');
+    label.textContent = state.students.length===0 ? 'Hali oʻquvchi qoʻshilmagan.' : ('Roʻyxatda: '+state.students.length+' oʻquvchi');
+    var mini = document.getElementById('student-count-mini');
+    if(mini) mini.textContent = state.students.length;
+  }
+
+  function addStudent(){
+    var input = document.getElementById('student-input');
+    var name = input.value.trim();
+    var errorEl = document.getElementById('student-error');
+    errorEl.textContent='';
+    if(!name){ return; }
+    if(state.students.indexOf(name)!==-1){ errorEl.textContent = 'Bu ism roʻyxatda bor.'; return; }
+    state.students.push(name);
+    saveStudents(); renderStudentChips();
+    input.value=''; input.focus();
+  }
+
+  var PICKER_STYLES = [
+    { key:'wheel', label:'Gʻildirak', icon:'<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/>' },
+    { key:'drum',  label:'Baraban',   icon:'<rect x="4" y="7" width="16" height="12" rx="6"/><path d="M4 13h16"/>' },
+    { key:'hook',  label:'Qarmoq',    icon:'<path d="M8 3v9a4 4 0 008 0"/><circle cx="8" cy="3" r="1.3" fill="currentColor"/>' },
+    { key:'box',   label:'Sirli quti',icon:'<path d="M3 9l9-5 9 5-9 5-9-5z"/><path d="M3 9v8l9 5 9-5V9"/><path d="M12 14v8"/>' },
+    { key:'dice',  label:'Kubik',     icon:'<rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/>' }
+  ];
+
+  function buildPickerStyleGrid(){
+    var grid = document.getElementById('picker-style-grid');
+    grid.innerHTML = PICKER_STYLES.map(function(s){
+      return '<button type="button" class="picker-style-btn'+(state.pickerStyle===s.key?' active':'')+'" data-style="'+s.key+'">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+s.icon+'</svg>'+
+        '<span>'+s.label+'</span></button>';
+    }).join('');
+    Array.prototype.forEach.call(grid.querySelectorAll('.picker-style-btn'), function(btn){
+      btn.addEventListener('click', function(){
+        sfx('select');
+        state.pickerStyle = btn.dataset.style;
+        Array.prototype.forEach.call(grid.querySelectorAll('.picker-style-btn'), function(b){ b.classList.toggle('active', b===btn); });
+      });
+    });
+  }
+
+  /* Physics-based lottery drum: balls tumble freely inside a circular
+     container (wall collisions + a gentle swirling "centrifuge" force
+     while spinning), then the target ball is ejected through a chute —
+     a believable alternative to rigidly rotating a flat SVG group. */
+  function runDrumPhysics(names, targetIdx, textEl, onDone){
+    var canvas = document.getElementById('drum-canvas');
+    if(!canvas) return onDone(names[targetIdx]);
+    var ctx = canvas.getContext('2d');
+    var W = canvas.width, H = canvas.height;
+    var cx = W/2, cy = H/2+8, R = Math.min(W,H)/2-16;
+    var palette = ['#ffb648','#49d9c4','#6be3a6','#ff6b7a','#c9a8ff','#f3f2fb','#7fd1ff'];
+    var ballR = Math.max(9, Math.min(16, 80/Math.max(4,names.length)+7));
+    var balls = names.map(function(name, i){
+      var ang = Math.random()*Math.PI*2, rad = Math.random()*(R-ballR-4);
+      return { name:name, x:cx+Math.cos(ang)*rad, y:cy+Math.sin(ang)*rad,
+        vx:(Math.random()-0.5)*1.2, vy:(Math.random()-0.5)*1.2, r:ballR, color:palette[i%palette.length] };
+    });
+    var duration = 4200, start = null, ejecting = false, lastTick = 0;
+
+    function drawShell(){
+      ctx.clearRect(0,0,W,H);
+      ctx.beginPath(); ctx.ellipse(cx,cy,R,R,0,0,Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,255,.035)'; ctx.fill();
+      ctx.lineWidth = 3; ctx.strokeStyle = '#49d9c4'; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx-18, cy-R-1); ctx.lineTo(cx+18, cy-R-1);
+      ctx.lineWidth = 5; ctx.strokeStyle = '#ffb648'; ctx.lineCap='round'; ctx.stroke();
+    }
+
+    function step(ts){
+      if(start===null) start = ts;
+      var t = Math.min(1, (ts-start)/duration);
+      var turbulence = (1-t)*0.85+0.05;
+      drawShell();
+      var lastLabelled = textEl ? Math.floor(ts/110) : 0;
+      balls.forEach(function(b, i){
+        var ang = Math.atan2(b.y-cy, b.x-cx);
+        var swirl = 0.3*turbulence;
+        b.vx += -Math.sin(ang)*swirl + (Math.random()-0.5)*0.55*turbulence;
+        b.vy += Math.cos(ang)*swirl + (Math.random()-0.5)*0.55*turbulence;
+        b.vx *= 0.986; b.vy *= 0.986;
+        b.x += b.vx; b.y += b.vy;
+        var dx=b.x-cx, dy=b.y-cy, dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist > R-b.r){
+          var nx=dx/dist, ny=dy/dist;
+          b.x = cx+nx*(R-b.r); b.y = cy+ny*(R-b.r);
+          var dot = b.vx*nx+b.vy*ny;
+          b.vx -= 2*dot*nx; b.vy -= 2*dot*ny;
+          b.vx *= 0.8; b.vy *= 0.8;
+        }
+        ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+        ctx.fillStyle = b.color; ctx.fill();
+      });
+      if(textEl && t<1){
+        var idx = Math.floor(ts/140) % names.length;
+        textEl.textContent = names[idx];
+        if(ts-lastTick>140){ lastTick=ts; sfx('tick'); }
+      }
+      if(t>=1 && !ejecting){
+        ejecting = true;
+        if(textEl) textEl.textContent = names[targetIdx];
+        var target = balls[targetIdx];
+        var ex = cx, ey = cy-R-2;
+        var ejStart = ts;
+        (function ejectStep(ts2){
+          var et = Math.min(1, (ts2-ejStart)/750);
+          target.x += (ex-target.x)*0.2; target.y += (ey-target.y)*0.2;
+          drawShell();
+          balls.forEach(function(b){
+            if(b===target && et>0.82) return;
+            ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+            ctx.fillStyle = b.color; ctx.fill();
+          });
+          if(et<1) requestAnimationFrame(ejectStep);
+          else onDone(target.name);
+        })(ts);
+        return;
+      }
+      requestAnimationFrame(step);
+    }
+    drawShell();
+    balls.forEach(function(b){ ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fillStyle=b.color; ctx.fill(); });
+    requestAnimationFrame(step);
+  }
+
+  function runCyclingPickGeneric(labels, targetIdx, el, onDone, ticks, baseDelay){
+    ticks = ticks || 16; baseDelay = baseDelay || 70;
+    var i = 0, delay = baseDelay;
+    function tick(){
+      i++;
+      var showIdx = (i>=ticks) ? targetIdx : rnd(0, labels.length-1);
+      el.textContent = labels[showIdx];
+      sfx('tick');
+      if(i<ticks){
+        delay = delay*1.16;
+        state.spinTimeout = setTimeout(tick, delay);
+      } else {
+        onDone();
+      }
+    }
+    tick();
+  }
+
+  function showPickerBackStage(){
+    showScreen('randomHome');
+    setMascot('randomhome','excited','Yana kimni chaqiramiz?');
+  }
+
+  function openRandomHome(){
+    loadStudents();
+    renderStudentChips();
+    buildPickerStyleGrid();
+    showScreen('randomHome');
+    setMascot('randomhome','excited','Oʻquvchilar roʻyxatini toʻldiring va tasodifiy tanlovni boshlang!');
+  }
+
+  function startStudentPick(){
+    var errorEl = document.getElementById('student-error');
+    errorEl.textContent='';
+    if(state.students.length<2){ errorEl.textContent='Kamida 2 ta oʻquvchi qoʻshing.'; return; }
+    state.targetIndex = rnd(0, state.students.length-1);
+    document.getElementById('reveal-panel').hidden = true;
+    document.getElementById('spin-title').textContent = 'Tanlanmoqda...';
+    showScreen('spin');
+    renderSpinStage(state.pickerStyle);
+  }
+
+  function renderSpinStage(style){
+    var stage = document.getElementById('spin-stage');
+    var names = state.students;
+    var targetName = names[state.targetIndex];
+    if(style==='wheel') return renderWheelStage(stage, names, state.targetIndex, targetName);
+    if(style==='drum') return renderDrumStage(stage, names, state.targetIndex, targetName);
+    if(style==='hook') return renderHookStage(stage, names);
+    if(style==='box') return renderBoxStage(stage, names, state.targetIndex, targetName);
+    if(style==='dice') return renderDiceStage(stage, names, state.targetIndex, targetName);
+  }
+
+  function renderWheelStage(stage, names, targetIdx, targetName){
+    stage.innerHTML =
+      '<div class="wheel-outer"><div class="wheel-pointer"></div>'+buildWheelSVG(names)+
+      '<button type="button" class="stage-start-btn" id="wheel-start-btn">Aylantirish! 🎡</button></div>';
+    document.getElementById('wheel-start-btn').addEventListener('click', function(){
+      this.remove();
+      var g = document.getElementById('wheel-g');
+      var n = names.length;
+      var segCenter = -90 + (360/n)*(targetIdx+0.5);
+      var base = (((-90 - segCenter) % 360) + 360) % 360;
+      var total = base + 6*360;
+      vibrate(12); sfx('whoosh');
+      requestAnimationFrame(function(){
+        g.style.transition = 'transform 5.4s cubic-bezier(.12,.72,.14,1)';
+        g.style.transform = 'rotate('+total+'deg)';
+      });
+      state.spinTimeout = setTimeout(function(){ vibrate(20); finishSpin(targetName); }, 5500);
+    });
+  }
+
+  function renderDrumStage(stage, names, targetIdx, targetName){
+    stage.innerHTML =
+      '<div class="drum-canvas-wrap">'+
+        '<canvas id="drum-canvas" width="260" height="220"></canvas>'+
+        '<button type="button" class="stage-start-btn" id="drum-start-btn">Aylantirish! 🎟️</button>'+
+      '</div>'+
+      '<p class="spin-display" id="spin-display">Tayyor...</p>';
+    document.getElementById('drum-start-btn').addEventListener('click', function(){
+      this.remove();
+      vibrate(14); sfx('whoosh');
+      runDrumPhysics(names, targetIdx, document.getElementById('spin-display'), function(name){
+        vibrate(22);
+        finishSpin(name);
+      });
+    });
+  }
+
+  function renderBoxStage(stage, names, targetIdx, targetName){
+    stage.innerHTML =
+      '<div class="box-wrap" id="spin-anim-el">'+
+        '<svg viewBox="0 0 100 90" style="width:140px;height:120px">'+
+          '<path d="M8 36l42-22 42 22-42 22-42-22z" fill="var(--algebra)"/>'+
+          '<path d="M8 36v32l42 22V58z" fill="var(--surface-2)" stroke="var(--border)"/>'+
+          '<path d="M92 36v32L50 90V58z" fill="var(--surface)" stroke="var(--border)"/>'+
+          '<text x="50" y="42" text-anchor="middle" font-size="22" fill="var(--bg-deep)" font-weight="800">?</text>'+
+        '</svg>'+
+      '</div>'+
+      '<button type="button" class="stage-start-btn" id="box-start-btn" style="position:static; transform:none">Ochish! 🎁</button>'+
+      '<p class="spin-display" id="spin-display">?</p>';
+    document.getElementById('box-start-btn').addEventListener('click', function(){
+      this.remove();
+      sfx('whoosh');
+      var el = document.getElementById('spin-anim-el');
+      el.style.animation = 'box-shake 0.17s linear 14';
+      vibrate([10,10,10,10,10]);
+      runCyclingPickGeneric(names, targetIdx, document.getElementById('spin-display'), function(){
+        el.style.animation = 'none';
+        vibrate(22);
+        finishSpin(targetName);
+      }, 16, 88);
+    });
+  }
+
+  function renderDiceStage(stage, names, targetIdx, targetName){
+    stage.innerHTML =
+      '<div class="dice-stage"><div class="dice-cube" id="spin-anim-el">'+
+        '<svg viewBox="0 0 60 60" style="width:90px;height:90px"><rect x="4" y="4" width="52" height="52" rx="12" fill="var(--algebra)"/>'+
+        '<circle cx="18" cy="18" r="4.5" fill="var(--algebra-ink)"/><circle cx="42" cy="18" r="4.5" fill="var(--algebra-ink)"/>'+
+        '<circle cx="18" cy="42" r="4.5" fill="var(--algebra-ink)"/><circle cx="42" cy="42" r="4.5" fill="var(--algebra-ink)"/>'+
+        '<circle cx="30" cy="30" r="4.5" fill="var(--algebra-ink)"/></svg>'+
+      '</div></div>'+
+      '<button type="button" class="stage-start-btn" id="dice-start-btn" style="position:static; transform:none">Dumalatish! 🎲</button>'+
+      '<p class="spin-display" id="spin-display">?</p>';
+    document.getElementById('dice-start-btn').addEventListener('click', function(){
+      this.remove();
+      sfx('whoosh');
+      var el = document.getElementById('spin-anim-el');
+      var rolls = 0, maxRolls = 8;
+      (function roll(){
+        rolls++;
+        el.style.transform = 'rotateX('+rnd(200,560)+'deg) rotateY('+rnd(200,560)+'deg)';
+        vibrate(8);
+        if(rolls<maxRolls) setTimeout(roll, 300);
+      })();
+      runCyclingPickGeneric(names, targetIdx, document.getElementById('spin-display'), function(){
+        el.style.transform = 'rotateX(0deg) rotateY(0deg)';
+        vibrate(22);
+        finishSpin(targetName);
+      }, 14, 90);
+    });
+  }
+
+  /* Hook: user-controlled "steal an egg" style claw. The trolley swings
+     back and forth on its own; the player times the drop, and whichever
+     name-egg sits under the claw at that moment is the one caught. */
+  function renderHookStage(stage, names){
+    var W = 300, margin = 24;
+    stage.innerHTML =
+      '<div class="hook-game" id="hook-game" style="width:'+W+'px">'+
+        '<div class="hook-rail"></div>'+
+        '<div class="hook-trolley" id="hook-trolley">'+
+          '<svg viewBox="0 0 28 14"><rect x="1" y="1" width="26" height="10" rx="3" fill="var(--geometry)"/><circle cx="14" cy="6" r="3" fill="var(--bg-deep)"/></svg>'+
+        '</div>'+
+        '<div class="hook-rope" id="hook-rope"></div>'+
+        '<div class="hook-claw" id="hook-claw">'+
+          '<svg viewBox="0 0 30 22"><path d="M6 1 Q1 12 9 16 M24 1 Q29 12 21 16" fill="none" stroke="var(--algebra)" stroke-width="4" stroke-linecap="round"/></svg>'+
+        '</div>'+
+        '<div class="egg-track" id="egg-track"></div>'+
+      '</div>'+
+      '<p class="hook-hint">Qarmoq tebranmoqda — toʻgʻri lahzani poylab, tugmani bosing!</p>'+
+      '<button type="button" class="btn-drop" id="btn-drop">Tushirish! 🪝</button>';
+
+    var track = document.getElementById('egg-track');
+    track.innerHTML = names.map(function(name){
+      return '<div class="egg"><div class="egg-shape"></div><div class="egg-name">'+escapeHtml(name)+'</div></div>';
+    }).join('');
+    var eggs = Array.prototype.slice.call(track.children);
+    var n = eggs.length;
+    var usableW = W - margin*2;
+    var slotX = eggs.map(function(_, i){ return margin + (n===1 ? usableW/2 : usableW*i/(n-1)); });
+
+    var trolley = document.getElementById('hook-trolley');
+    var rope = document.getElementById('hook-rope');
+    var claw = document.getElementById('hook-claw');
+    rope.style.left = margin+'px'; rope.style.height='40px';
+    claw.style.left = margin+'px'; claw.style.top='52px';
+    trolley.style.left = margin+'px';
+
+    var oscStart = null, oscRaf, dropping = false;
+    function oscStep(ts){
+      if(oscStart===null) oscStart = ts;
+      var t = (ts-oscStart)/1000, period = 2.3;
+      var frac = (Math.sin((t/period)*Math.PI*2 - Math.PI/2)+1)/2;
+      var x = margin + frac*usableW;
+      trolley.style.left = x+'px';
+      rope.style.left = x+'px';
+      claw.style.left = x+'px';
+      if(!dropping) oscRaf = requestAnimationFrame(oscStep);
+    }
+    oscRaf = requestAnimationFrame(oscStep);
+
+    document.getElementById('btn-drop').addEventListener('click', function(){
+      if(dropping) return;
+      dropping = true;
+      cancelAnimationFrame(oscRaf);
+      this.disabled = true;
+      var curX = parseFloat(trolley.style.left) || margin;
+      var nearest = 0, best = Infinity;
+      slotX.forEach(function(sx, i){ var d = Math.abs(sx-curX); if(d<best){ best=d; nearest=i; } });
+      vibrate(12);
+      sfx('drop');
+      rope.style.transition = 'height .62s ease-in';
+      rope.style.height = '150px';
+      claw.style.transition = 'top .62s ease-in';
+      claw.style.top = '162px';
+      setTimeout(function(){
+        eggs[nearest].classList.add('caught');
+        vibrate(24);
+        sfx('catch');
+        setTimeout(function(){
+          rope.style.transition = 'height .68s ease-out';
+          rope.style.height = '40px';
+          claw.style.transition = 'top .68s ease-out';
+          claw.style.top = '52px';
+          setTimeout(function(){ finishSpin(names[nearest]); }, 700);
+        }, 340);
+      }, 640);
+    });
+  }
+
+  function finishSpin(name){
+    state.chosenStudent = name;
+    document.getElementById('spin-title').textContent = 'Tabriklaymiz!';
+    document.getElementById('reveal-name').textContent = name;
+    document.getElementById('reveal-panel').hidden = false;
+    setMascot('spin','celebrating','Ajoyib tanlov!');
+    sfx('reveal');
+    launchConfetti();
+  }
+
+  function startTypeReveal(){
+    showScreen('typeReveal');
+    document.getElementById('btn-start-random-question').hidden = true;
+    setMascot('typereveal','thinking','Savol turini aniqlaymiz...');
+    var modeKeys = ['algebra','geometry'];
+    var modeLabels = { algebra:'Algebra olami', geometry:'Geometriya olami' };
+    var targetMode = pick(modeKeys);
+    var targetDiffKey = pick(DIFF_ORDER);
+    state.revealMode = targetMode;
+    state.revealDiffKey = targetDiffKey;
+    var modeEl = document.getElementById('reveal-mode-text');
+    var diffEl = document.getElementById('reveal-diff-text');
+    var doneCount = 0;
+    function onPartDone(){
+      doneCount++;
+      if(doneCount>=2){
+        document.getElementById('btn-start-random-question').hidden = false;
+        setMascot('typereveal','excited','Tayyormisiz?');
+      }
+    }
+    runCyclingPickGeneric(modeKeys.map(function(m){return modeLabels[m];}), modeKeys.indexOf(targetMode), modeEl, onPartDone, 12, 90);
+    runCyclingPickGeneric(DIFF_ORDER.map(function(k){return DIFFICULTIES[k].label;}), DIFF_ORDER.indexOf(targetDiffKey), diffEl, onPartDone, 14, 90);
+  }
+
+  function buildWheelSVG(names){
+    var n = names.length, cx=110, cy=110, r=100;
+    var colors = ['var(--geometry)','var(--algebra)','var(--success)','var(--danger)'];
+    var segs='', labels='';
+    for(var i=0;i<n;i++){
+      var a0 = (360/n)*i - 90, a1 = (360/n)*(i+1) - 90;
+      var large = (a1-a0)>180?1:0;
+      var x0 = cx + r*Math.cos(a0*Math.PI/180), y0 = cy + r*Math.sin(a0*Math.PI/180);
+      var x1 = cx + r*Math.cos(a1*Math.PI/180), y1 = cy + r*Math.sin(a1*Math.PI/180);
+      segs += '<path d="M'+cx+' '+cy+' L'+x0+' '+y0+' A'+r+' '+r+' 0 '+large+' 1 '+x1+' '+y1+' Z" fill="'+colors[i%colors.length]+'" stroke="var(--bg-deep)" stroke-width="1.5"/>';
+      var mid = (a0+a1)/2;
+      var lx = cx + (r*0.62)*Math.cos(mid*Math.PI/180), ly = cy + (r*0.62)*Math.sin(mid*Math.PI/180);
+      labels += '<text x="'+lx+'" y="'+ly+'" transform="rotate('+(mid+90)+' '+lx+' '+ly+')" text-anchor="middle" font-size="10" font-weight="700" fill="var(--bg-deep)">'+escapeHtml(names[i]).slice(0,10)+'</text>';
+    }
+    return '<svg viewBox="0 0 220 220" style="width:220px;height:220px;display:block;margin:0 auto"><g id="wheel-g">'+segs+labels+'</g><circle cx="'+cx+'" cy="'+cy+'" r="14" fill="var(--bg-deep)" stroke="var(--border)" stroke-width="2"/></svg>';
+  }
+
+  function updateStudentTag(){
+    var tagEl = document.getElementById('student-tag');
+    if(!tagEl) return;
+    if(state.activeStudent){ tagEl.hidden=false; document.getElementById('student-tag-name').textContent = state.activeStudent; }
+    else{ tagEl.hidden=true; }
+  }
+
+  /* ---------- Wire up ---------- */
+  document.querySelectorAll('.mode-card[data-mode]').forEach(function(card){
+    card.addEventListener('mouseenter', function(){ sfx('hover'); });
+    card.addEventListener('click', function(){
+      sfx('menu-open');
+      state.activeStudent = null;
+      showDifficultyScreen(card.dataset.mode);
+    });
+  });
+  document.getElementById('mode-card-random').addEventListener('mouseenter', function(){ sfx('hover'); });
+  document.getElementById('mode-card-random').addEventListener('click', function(){ sfx('menu-open'); openRandomHome(); });
+  document.getElementById('btn-diff-back').addEventListener('click', function(){
+    sfx('click');
+    showScreen('start');
+    setMascot('start','wave','Qaysi olamni zabt etamiz?');
+  });
+  document.getElementById('btn-quit').addEventListener('click', function(){
+    sfx('click');
+    clearTimeout(state.timerTimeout); clearTimeout(state.mascotTimeout); clearInterval(state.countdownInterval);
+    showScreen('start');
+    setMascot('start','wave','Qaysi olamni zabt etamiz?');
+  });
+  document.getElementById('btn-again').addEventListener('click', function(){ sfx('click'); startRound(state.mode, state.diffKey); });
+  els.btnNextQuestion.addEventListener('click', function(){ sfx('click'); els.btnNextQuestion.hidden = true; nextQuestion(); });
+  document.getElementById('btn-menu').addEventListener('click', function(){
+    sfx('click');
+    showScreen('start');
+    setMascot('start','wave','Qaysi olamni zabt etamiz?');
+  });
+
+  document.getElementById('btn-random-home-back').addEventListener('click', function(){
+    sfx('click');
+    showScreen('start');
+    setMascot('start','wave','Qaysi olamni zabt etamiz?');
+  });
+  document.getElementById('btn-add-student').addEventListener('click', function(){ sfx('click'); addStudent(); });
+  document.getElementById('student-input').addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); addStudent(); } });
+  document.getElementById('btn-start-pick').addEventListener('click', function(){ sfx('click'); startStudentPick(); });
+  document.getElementById('btn-spin-back').addEventListener('click', function(){
+    sfx('click');
+    clearTimeout(state.spinTimeout);
+    showPickerBackStage();
+  });
+  document.getElementById('btn-spin-continue').addEventListener('click', function(){
+    sfx('click');
+    state.activeStudent = state.chosenStudent;
+    startTypeReveal();
+  });
+  document.getElementById('btn-start-random-question').addEventListener('click', function(){
+    sfx('click');
+    startRound(state.revealMode, state.revealDiffKey);
+  });
+
+  /* ---------- Ambient background decor ---------- */
+  function buildAmbientBackground(){
+    var starsWrap = document.getElementById('bg-stars');
+    var frag = document.createDocumentFragment();
+    for(var i=0;i<38;i++){
+      var s = document.createElement('span');
+      s.className = 'bg-star';
+      s.style.left = (Math.random()*100)+'%';
+      s.style.top = (Math.random()*100)+'%';
+      var sz = (1+Math.random()*2.2).toFixed(1);
+      s.style.width = sz+'px'; s.style.height = sz+'px';
+      s.style.animationDuration = (1.6+Math.random()*2.6)+'s';
+      s.style.animationDelay = (Math.random()*4)+'s';
+      frag.appendChild(s);
+    }
+    starsWrap.appendChild(frag);
+
+    var symbolsWrap = document.getElementById('bg-symbols');
+    var glyphs = ['+','−','×','÷','=','π','√','△','○','□','%'];
+    var frag2 = document.createDocumentFragment();
+    for(var j=0;j<13;j++){
+      var sym = document.createElement('span');
+      sym.className = 'bg-symbol';
+      sym.textContent = glyphs[j % glyphs.length];
+      sym.style.left = (Math.random()*96)+'%';
+      sym.style.fontSize = (1.1+Math.random()*1.8)+'rem';
+      sym.style.color = (j%2===0) ? 'var(--geometry)' : 'var(--algebra)';
+      sym.style.animationDuration = (16+Math.random()*14)+'s';
+      sym.style.animationDelay = (-Math.random()*26)+'s';
+      frag2.appendChild(sym);
+    }
+    symbolsWrap.appendChild(frag2);
+  }
+
+  loadBest();
+  loadStudents();
+  renderStudentChips();
+  buildDifficultyGrid();
+  buildPickerStyleGrid();
+  buildAmbientBackground();
+
+  function boot(){
+    showScreen('start');
+    setMascot('start','wave','Qaysi olamni zabt etamiz?');
+  }
+  if(window.claude && window.claude.hot){
+    window.claude.hot.ready ? window.claude.hot.ready(boot) : boot();
+  } else {
+    boot();
+  }
+})();
+</script>
+
+</body>
+
+</html>

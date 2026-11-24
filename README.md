@@ -1,1 +1,0 @@
-# Son-va-Shakl
